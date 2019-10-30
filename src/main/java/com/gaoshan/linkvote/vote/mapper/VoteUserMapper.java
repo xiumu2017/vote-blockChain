@@ -26,14 +26,6 @@ public interface VoteUserMapper {
     int insert(VoteUser record);
 
     /**
-     * insert record to table selective
-     *
-     * @param record the record
-     * @return insert count
-     */
-    int insertSelective(VoteUser record);
-
-    /**
      * select by primary key
      *
      * @param id primary key
@@ -41,31 +33,20 @@ public interface VoteUserMapper {
      */
     VoteUser selectByPrimaryKey(Long id);
 
-    /**
-     * update record
-     *
-     * @param record the updated record
-     * @return update count
-     */
-    int updateByPrimaryKeySelective(VoteUser record);
-
-    /**
-     * update record selective
-     *
-     * @param record the updated record
-     * @return update count
-     */
-    int updateByPrimaryKey(VoteUser record);
-
     List<VoteUser> selectByVoteIdAndUserId(@Param("voteId") Long voteId, @Param("userId") Long userId);
 
     Long countByVoteIdAndOptId(@Param("voteId") Long voteId, @Param("optId") Long optId);
 
 
-    int insertBatch(@Param("userId") Long userId, @Param("voteId") Long voteId,
+    int insertBatch(@Param("userId") Long userId,
+                    @Param("address") String address,
+                    @Param("voteId") Long voteId,
                     @Param("optionIdList") List<Long> optionIdList);
 
-    List<VoteUser> selectAllByOptId(@Param("optId")Long optId);
+    List<VoteUser> selectAllByOptId(@Param("optId") Long optId);
 
 
+    int updateVoteHash(@Param("userId") Long userId,
+                       @Param("voteId") Long voteId,
+                       @Param("hash") String hash);
 }

@@ -18,19 +18,19 @@ public class Vote {
     @ApiModelProperty(value = "投票id", hidden = true)
     private Long id;
 
-    @ApiModelProperty("投票主题")
+    @ApiModelProperty(value = "投票主题", required = true)
     private String topic;
 
     @ApiModelProperty("投票描述")
     private String desc;
 
-    @ApiModelProperty(value = "投票图片url", hidden = true)
-    private String picture;
+    @ApiModelProperty(value = "投票图片Id", required = true)
+    private Long fileId;
 
     @ApiModelProperty(value = "投票类型", hidden = true)
     private String type;
 
-    @ApiModelProperty(value = "投票状态，未开始、进行中、已结束", hidden = true)
+    @ApiModelProperty(value = "投票状态", hidden = true)
     private String status;
 
     @ApiModelProperty(hidden = true)
@@ -39,18 +39,25 @@ public class Vote {
     @ApiModelProperty(value = "投票限制多选数量，单选则为1", example = "1")
     private Integer limitNum;
 
-    @ApiModelProperty("投票开始时间")
+    @ApiModelProperty(value = "投票开始时间", hidden = true)
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT +8")
     private Date startTime;
 
-    @ApiModelProperty("投票结束时间")
+    @ApiModelProperty(value = "投票结束时间", required = true, example = "2019-11-11 12:00:00")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
 
+    @ApiModelProperty(hidden = true)
+    private String hash;
+
+    @ApiModelProperty(hidden = true)
     private Long createUser;
+    @ApiModelProperty(hidden = true)
     private Long updateUser;
+    @ApiModelProperty(hidden = true)
     private Date createTime;
+    @ApiModelProperty(hidden = true)
     private Date updateTime;
 }

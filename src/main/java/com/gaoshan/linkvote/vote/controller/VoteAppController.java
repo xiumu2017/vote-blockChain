@@ -24,7 +24,7 @@ import java.util.Date;
 /**
  * @author Paradise
  */
-@Api(tags = "投票相关接口")
+@Api(tags = "投票相关APP接口")
 @Slf4j
 @RestController
 @RequestMapping("/vote/app")
@@ -79,19 +79,38 @@ public class VoteAppController {
      */
     @ApiOperation("发起投票")
     @ApiImplicitParams({@ApiImplicitParam(name = "optionJson", value = "选项JSON数据",
-            example = "[{index:1,content:'同意'},{index:2,content:'反对'}]", required = true)})
+            example = "[{index:1,content:'同意'},{index:2,content:'反对'}]", required = true),
+            @ApiImplicitParam(name = "address", value = "地址", required = true)})
     @PostMapping("/create")
     public R addVote(@ApiParam("投票实体") Vote vote,
                      String optionJson,
                      String address) {
         try {
+            if (StringUtils.isBlank(address)) {
+                return Rx.error("地址信息为空");
+            }
             if (StringUtils.isBlank(optionJson)) {
                 return Rx.error("投票选项数据为空");
             }
         } catch (Exception e) {
-            return Rx.error("9999", "投票选项数据解析错误" + e.getLocalizedMessage());
+            return Rx.error("500", "投票选项数据解析错误" + e.getLocalizedMessage());
         }
-        return voteService.insert(vote, optionJson);
+        return voteService.insert(vote, optionJson, address);
+    }
+
+    @ApiOperation("更新投票的上链Hash")
+    @PostMapping("/updateVoteHash")
+    public R updateVoteHash(String address, Long voteId, String hash) {
+        if (StringUtils.isBlank(address)) {
+            return Rx.error("地址信息为空");
+        }
+        if (StringUtils.isBlank(hash)) {
+            return Rx.error("Hash不能为空");
+        }
+        if (voteId == null) {
+            return Rx.error("投票ID为空");
+        }
+        return voteService.updateVoteHash(address, voteId, hash);
     }
 
     @ApiOperation("删除投票")
@@ -142,10 +161,30 @@ public class VoteAppController {
         return voteService.getVoteOptionDetail(optionId);
     }
 
+    /**
+     * app 用户投票
+     *
+     * @param voteId  投票id
+     * @param options 选项列表
+     * @param address 用户地址
+     * @return {@link R}
+     */
     @ApiOperation("用户投票")
     @PostMapping("/doVote")
-    public R vote(Long voteId, String options, Principal principal) {
-        return voteService.doVote(voteId, options, principal);
+    @ApiImplicitParams({@ApiImplicitParam("投票id"),
+            @ApiImplicitParam("选项id，多选英文逗号分隔"),
+            @ApiImplicitParam(name = "address", value = "地址")})
+    public R vote(Long voteId, String options, String address) {
+        return voteService.doVoteApp(voteId, options, address);
+    }
+
+    @ApiOperation("更新用户投票上链的Hash")
+    @ApiImplicitParams({@ApiImplicitParam(name = "address", value = "地址"),
+            @ApiImplicitParam("投票id"),
+            @ApiImplicitParam("交易Hash")})
+    @PostMapping("/updateAppVoteHash")
+    public R updateAppVoteHash(String address, Long voteId, String hash) {
+        return voteService.updateAppVoteHash(address, voteId, hash);
     }
 
     private String formatDate() {

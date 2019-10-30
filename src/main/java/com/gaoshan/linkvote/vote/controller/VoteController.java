@@ -24,7 +24,7 @@ import java.security.Principal;
 /**
  * @author Paradise
  */
-@Api(tags = "投票相关接口")
+@Api(tags = "投票相关接口", hidden = true)
 @Slf4j
 @RestController
 @RequestMapping("/vote")
@@ -56,7 +56,7 @@ public class VoteController {
             example = "[{index:1,content:'同意'},{index:2,content:'反对'}]", required = true)})
     @PostMapping("/create")
     public R addVote(@ApiParam("投票实体") Vote vote,
-                     String optionJson) {
+                     String optionJson, String address) {
         try {
             if (StringUtils.isBlank(optionJson)) {
                 return Rx.error("投票选项数据为空");
@@ -64,7 +64,7 @@ public class VoteController {
         } catch (Exception e) {
             return Rx.error("9999", "投票选项数据解析错误" + e.getLocalizedMessage());
         }
-        return voteService.insert(vote, optionJson);
+        return voteService.insert(vote, optionJson, address);
     }
 
     @ApiOperation("删除投票")

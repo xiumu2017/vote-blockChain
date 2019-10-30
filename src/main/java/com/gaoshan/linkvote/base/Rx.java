@@ -26,7 +26,7 @@ public class Rx {
     }
 
     public static <T> R<T> error(String msg) {
-        return new R<>("5555", msg, null);
+        return new R<>("500", msg, null);
     }
 
     public static <T> R<T> error(String code, String msg, T data) {

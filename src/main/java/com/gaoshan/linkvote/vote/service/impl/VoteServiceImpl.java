@@ -6,18 +6,16 @@ import com.gaoshan.linkvote.base.Rx;
 import com.gaoshan.linkvote.user.bean.SysUser;
 import com.gaoshan.linkvote.user.mapper.SysUserMapper;
 import com.gaoshan.linkvote.vote.entity.*;
+import com.gaoshan.linkvote.vote.mapper.VoteMapper;
 import com.gaoshan.linkvote.vote.mapper.VoteOptionMapper;
 import com.gaoshan.linkvote.vote.mapper.VoteUserMapper;
+import com.gaoshan.linkvote.vote.service.VoteService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-
-import com.gaoshan.linkvote.vote.mapper.VoteMapper;
-import com.gaoshan.linkvote.vote.service.VoteService;
-
-import java.security.Principal;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,11 +39,18 @@ public class VoteServiceImpl implements VoteService {
     }
 
     @Override
-    public R insert(Vote record, String optionJson) {
+    public R insert(Vote record, String optionJson, String address) {
+        SysUser user = userMapper.selectByAddress(address);
+        if (user == null) {
+            return Rx.error("地址信息未入库");
+        }
         List<VoteOption> optionList = JSONArray.parseArray(optionJson, VoteOption.class);
         if (optionList.size() < 2) {
             return Rx.error("投票选项数量小于2");
         }
+        record.setCreateUser(user.getId());
+        record.setUpdateUser(user.getId());
+        record.setStatus(Vote_Status.CREATE.getCode());
         voteMapper.insert(record);
         if (record.getId() != null) {
             for (VoteOption option : optionList) {
@@ -102,31 +107,6 @@ public class VoteServiceImpl implements VoteService {
     }
 
     @Override
-    public R doVote(Long voteId, String options, Principal principal) {
-        SysUser user = userMapper.selectByName(principal.getName());
-        // 判断是否可以投票
-        Vote vote = voteMapper.selectByPrimaryKey(voteId);
-        if (!vote.getStatus().equals(Vote_Status.ING.getCode())) {
-            return Rx.error("当前投票未开始或已结束");
-        }
-        List<VoteUser> voteUserList = voteUserMapper.selectByVoteIdAndUserId(voteId, user.getId());
-        if (!voteUserList.isEmpty()) {
-            return Rx.error("不能重复投票");
-        }
-        String[] optionArr = options.split(",");
-        List<Long> optionIdList = new ArrayList<>();
-        for (String optionId : optionArr) {
-            if (optionMapper.selectByPrimaryKey(Long.valueOf(optionId)) == null) {
-                return Rx.error("投票选项id不存在");
-            } else {
-                optionIdList.add(Long.valueOf(optionId));
-            }
-        }
-        voteUserMapper.insertBatch(user.getId(), voteId, optionIdList);
-        return Rx.success();
-    }
-
-    @Override
     public R getVoteOptionDetail(Long optionId) {
         VoteOption option = optionMapper.selectByPrimaryKey(optionId);
         if (option == null) {
@@ -146,6 +126,74 @@ public class VoteServiceImpl implements VoteService {
             }
         }
         return Rx.success(resultList);
+    }
+
+    @Override
+    public R updateVoteHash(String address, Long voteId, String hash) {
+        Vote vote = voteMapper.selectByPrimaryKey(voteId);
+        if (vote == null) {
+            return Rx.error("投票不存在或已删除");
+        }
+        vote.setHash(hash);
+        SysUser sysUser = userMapper.selectByAddress(address);
+        if (sysUser == null) {
+            return Rx.error("地址信息未入库");
+        }
+        vote.setUpdateUser(sysUser.getId());
+        if (voteMapper.updateByPrimaryKeySelective(vote) == 1) {
+            return Rx.success();
+        }
+        return Rx.fail();
+    }
+
+    @Override
+    public R doVoteApp(Long voteId, String options, String address) {
+        // 判断投票状态
+        Vote vote = voteMapper.selectByPrimaryKey(voteId);
+        if (vote == null || !vote.getStatus().equals(Vote_Status.ING.getCode())) {
+            return Rx.error("投票不存在或已截止");
+        }
+        SysUser user = userMapper.selectByAddress(address);
+        if (user == null) {
+            SysUser sysUser = new SysUser();
+            sysUser.setAddress(address);
+            userMapper.insert(sysUser);
+            user = sysUser;
+        }
+        // 判断选项合理性
+        String[] optionArr = options.split(",");
+        if (optionArr.length > vote.getLimitNum()) {
+            return Rx.error("选项数量超出限制");
+        }
+        // 判断是否已经投票
+        List<VoteUser> voteUserList = voteUserMapper.selectByVoteIdAndUserId(voteId, user.getId());
+        if (!voteUserList.isEmpty()) {
+            return Rx.error("不能重复投票");
+        }
+        // 选项入库
+        List<Long> optionIdList = new ArrayList<>();
+        for (String optionId : optionArr) {
+            if (optionMapper.selectByPrimaryKey(Long.valueOf(optionId)) == null) {
+                return Rx.error("投票选项id不存在");
+            } else {
+                optionIdList.add(Long.valueOf(optionId));
+            }
+        }
+        voteUserMapper.insertBatch(user.getId(), address, voteId, optionIdList);
+        // 处理返回的json
+        return Rx.success(voteId + File.separator + options);
+    }
+
+    @Override
+    public R updateAppVoteHash(String address, Long voteId, String hash) {
+        SysUser user = userMapper.selectByAddress(address);
+        if (user == null) return Rx.error("address地址信息未入库");
+
+        Vote vote = voteMapper.selectByPrimaryKey(voteId);
+        if (vote == null) return Rx.error("投票不存在或已删除");
+
+        voteUserMapper.updateVoteHash(user.getId(), voteId, hash);
+        return Rx.success();
     }
 
 }

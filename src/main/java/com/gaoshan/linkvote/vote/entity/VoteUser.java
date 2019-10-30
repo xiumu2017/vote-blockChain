@@ -1,11 +1,11 @@
 package com.gaoshan.linkvote.vote.entity;
 
-import com.gaoshan.linkvote.base.BaseEntity;
-import java.util.Date;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
-public class VoteUser extends BaseEntity {
+public class VoteUser {
     private Long id;
 
     private Long userId;
@@ -13,6 +13,12 @@ public class VoteUser extends BaseEntity {
     private Long voteId;
 
     private Long optId;
+
+    private String address;
+
+    private String status;
+
+    private String hash;
 
     private Date voteTime;
 }

@@ -5,13 +5,11 @@ import com.gaoshan.linkvote.vote.entity.Vote;
 import com.gaoshan.linkvote.vote.entity.VoteQuery;
 import com.github.pagehelper.PageInfo;
 
-import java.security.Principal;
-
 public interface VoteService {
 
     int deleteByPrimaryKey(Long id);
 
-    R insert(Vote record, String optionJson);
+    R insert(Vote record, String optionJson, String address);
 
     int insertSelective(Vote record);
 
@@ -25,7 +23,11 @@ public interface VoteService {
 
     R getVoteDetail(Long voteId, String name);
 
-    R doVote(Long voteId, String options, Principal principal);
-
     R getVoteOptionDetail(Long optionId);
+
+    R updateVoteHash(String address, Long voteId, String hash);
+
+    R doVoteApp(Long voteId, String options, String address);
+
+    R updateAppVoteHash(String address, Long voteId, String hash);
 }

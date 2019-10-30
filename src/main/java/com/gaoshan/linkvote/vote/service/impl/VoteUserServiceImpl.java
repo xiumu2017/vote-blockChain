@@ -1,12 +1,15 @@
 package com.gaoshan.linkvote.vote.service.impl;
 
 import org.springframework.stereotype.Service;
+
 import javax.annotation.Resource;
+
 import com.gaoshan.linkvote.vote.entity.VoteUser;
 import com.gaoshan.linkvote.vote.mapper.VoteUserMapper;
 import com.gaoshan.linkvote.vote.service.VoteUserService;
+
 @Service
-public class VoteUserServiceImpl implements VoteUserService{
+public class VoteUserServiceImpl implements VoteUserService {
 
     @Resource
     private VoteUserMapper voteUserMapper;
@@ -22,23 +25,8 @@ public class VoteUserServiceImpl implements VoteUserService{
     }
 
     @Override
-    public int insertSelective(VoteUser record) {
-        return voteUserMapper.insertSelective(record);
-    }
-
-    @Override
     public VoteUser selectByPrimaryKey(Long id) {
         return voteUserMapper.selectByPrimaryKey(id);
-    }
-
-    @Override
-    public int updateByPrimaryKeySelective(VoteUser record) {
-        return voteUserMapper.updateByPrimaryKeySelective(record);
-    }
-
-    @Override
-    public int updateByPrimaryKey(VoteUser record) {
-        return voteUserMapper.updateByPrimaryKey(record);
     }
 
 }

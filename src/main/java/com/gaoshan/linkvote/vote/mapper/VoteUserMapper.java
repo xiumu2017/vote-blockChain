@@ -49,4 +49,10 @@ public interface VoteUserMapper {
     int updateVoteHash(@Param("userId") Long userId,
                        @Param("voteId") Long voteId,
                        @Param("hash") String hash);
+
+    int updateStatus(@Param("voteId") Long voteId,
+                     @Param("userId") Long userId,
+                     @Param("status") String status);
+
+    List<VoteUser> selectUnConfirmedHash();
 }

@@ -1,7 +1,26 @@
 package com.gaoshan.linkvote.vote.entity;
 
 public enum Vote_Status {
-    CREATE("0"),BLCOK_SUCCESS("2"),BLOBK_FAIL("3"), ING("1"), ENDED("2");
+    /**
+     * 初始化创建
+     */
+    CREATE("0"),
+    /**
+     * 上链成功
+     */
+    BLOCK_SUCCESS("1"),
+    /**
+     * 上链失败
+     */
+    BLOCK_FAIL("2"),
+    /**
+     * 进行中
+     */
+    ING("3"),
+    /**
+     * 已截止
+     */
+    ENDED("4");
 
     private String code;
 

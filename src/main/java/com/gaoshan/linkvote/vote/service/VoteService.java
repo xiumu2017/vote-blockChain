@@ -30,4 +30,8 @@ public interface VoteService {
     R doVoteApp(Long voteId, String options, String address);
 
     R updateAppVoteHash(String address, Long voteId, String hash);
+
+    R appQueryVotePage(String address, Integer pageNum, Integer pageSize);
+
+    R getAppVoteDetail(Long voteId, String address);
 }

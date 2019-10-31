@@ -72,10 +72,28 @@
         where opt_id=#{optId,jdbcType=BIGINT}
         order by vote_time desc
     </select>
+
     <update id="updateVoteHash">
         update t_vote_user
         set hash = #{hash,jdbcType=VARCHAR}
         where user_id = #{userId}
         and vote_id = #{voteId}
     </update>
+
+    <update id="updateStatus">
+        update t_vote_user
+        set status = #{status}
+        where user_id = #{userId}
+        and vote_id = #{voteId}
+    </update>
+    <select id="selectUnConfirmedHash" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from t_vote_user t,(
+        select user_id,vote_id
+        from t_vote_user
+        where status = '0'
+          and hash is not null
+        group by user_id, vote_id) r
+        where t.user_id = r.user_id and r.vote_id = t.vote_id
+    </select>
 </mapper>

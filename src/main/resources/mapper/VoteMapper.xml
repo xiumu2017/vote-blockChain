@@ -161,7 +161,7 @@
             <if test="updateUser != null">
                 update_user = #{updateUser,jdbcType=BIGINT},
             </if>
-                update_time = now(),
+            update_time = now(),
         </set>
         where id = #{id,jdbcType=BIGINT}
     </update>
@@ -204,7 +204,44 @@
         </if>
         order by create_time desc
     </select>
+
     <select id="selectNow" resultType="java.util.Date">
         select CURRENT_TIMESTAMP();
     </select>
+
+    <!--  App 查询投票列表，状态为进行中和上链成功的，管理员可以看到全部？  -->
+    <select id="selectByApp" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_vote
+        where 1=1
+        and is_del= 0
+        and status <![CDATA[ >= ]]> 3
+    </select>
+    <select id="selectUnConfirmedHash" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_vote
+        where is_del = 0
+        and status = 0
+    </select>
+
+    <update id="updateStatus">
+        update t_vote
+        set status = #{code}
+        where id = #{id}
+    </update>
+    <update id="updateBlockSuccessToIng">
+        update t_vote
+        set status = '3'
+        where status = '1'
+          and is_del = '0'
+    </update>
+    <update id="setEndedStatus">
+        update t_vote
+        set status = '4'
+        where status = '3'
+          and is_del = '0'
+          and now() <![CDATA[ >= ]]> end_time
+    </update>
 </mapper>

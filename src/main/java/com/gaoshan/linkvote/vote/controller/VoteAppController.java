@@ -5,7 +5,6 @@ import com.gaoshan.linkvote.base.Rx;
 import com.gaoshan.linkvote.sys.entity.SysFile;
 import com.gaoshan.linkvote.sys.service.SysFileService;
 import com.gaoshan.linkvote.vote.entity.Vote;
-import com.gaoshan.linkvote.vote.entity.VoteQuery;
 import com.gaoshan.linkvote.vote.service.VoteService;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -134,9 +132,14 @@ public class VoteAppController {
      * @return 封装数据
      */
     @ApiOperation("分页查询投票列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(value = "地址"),
+            @ApiImplicitParam(value = "pageNum"),
+            @ApiImplicitParam(value = "pageSize"),
+    })
     @GetMapping("/queryVotePage")
-    public R queryVotePage(@ApiParam("分页查询实体") VoteQuery query) {
-        return Rx.success(voteService.queryByPage(query));
+    public R appQueryVotePage(String address, Integer pageNum, Integer pageSize) {
+        return Rx.success(voteService.appQueryVotePage(address, pageNum, pageSize));
     }
 
     /**
@@ -148,11 +151,11 @@ public class VoteAppController {
      */
     @ApiOperation("查询投票详情")
     @GetMapping("/getVoteDetail")
-    public R getVoteDetail(Long voteId, Principal principal) {
+    public R getAppVoteDetail(Long voteId, String address) {
         if (voteId == null) {
             return Rx.error("参数为空异常！");
         }
-        return voteService.getVoteDetail(voteId, principal.getName());
+        return voteService.getAppVoteDetail(voteId, address);
     }
 
     @ApiOperation("查看选项")
@@ -171,8 +174,8 @@ public class VoteAppController {
      */
     @ApiOperation("用户投票")
     @PostMapping("/doVote")
-    @ApiImplicitParams({@ApiImplicitParam("投票id"),
-            @ApiImplicitParam("选项id，多选英文逗号分隔"),
+    @ApiImplicitParams({@ApiImplicitParam(name = "voteId",value = "投票id"),
+            @ApiImplicitParam(name = "options",value = "选项id，多选英文逗号分隔"),
             @ApiImplicitParam(name = "address", value = "地址")})
     public R vote(Long voteId, String options, String address) {
         return voteService.doVoteApp(voteId, options, address);
@@ -180,8 +183,8 @@ public class VoteAppController {
 
     @ApiOperation("更新用户投票上链的Hash")
     @ApiImplicitParams({@ApiImplicitParam(name = "address", value = "地址"),
-            @ApiImplicitParam("投票id"),
-            @ApiImplicitParam("交易Hash")})
+            @ApiImplicitParam(name = "voteId",value = "投票id"),
+            @ApiImplicitParam(name = "hash",value = "交易Hash")})
     @PostMapping("/updateAppVoteHash")
     public R updateAppVoteHash(String address, Long voteId, String hash) {
         return voteService.updateAppVoteHash(address, voteId, hash);

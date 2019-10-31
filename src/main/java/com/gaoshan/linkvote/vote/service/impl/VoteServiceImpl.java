@@ -196,4 +196,33 @@ public class VoteServiceImpl implements VoteService {
         return Rx.success();
     }
 
+    @Override
+    public R appQueryVotePage(String address, Integer pageNum, Integer pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<Vote> list = voteMapper.selectByApp();
+        return Rx.success(new PageInfo<>(list));
+    }
+
+    @Override
+    public R getAppVoteDetail(Long voteId, String address) {
+        // 查询投票信息
+        Vote vote = voteMapper.selectByPrimaryKey(voteId);
+        if (vote == null){
+            return Rx.error("投票不存在或已删除");
+        }
+        // 查询选项信息和统计数量
+        List<VoteOption> optionList = optionMapper.selectByVoteId(voteId);
+        for (VoteOption option : optionList) {
+            option.setCount(voteUserMapper.countByVoteIdAndOptId(voteId, option.getId()));
+        }
+        Map<String, Object> resultMap = new HashMap<>();
+        // 查询当前用户信息以及用户投票信息
+        SysUser user = userMapper.selectByAddress(address);
+        List<VoteUser> voteUserList = voteUserMapper.selectByVoteIdAndUserId(voteId, user.getId());
+        resultMap.put("vote", vote);
+        resultMap.put("optionList", optionList);
+        resultMap.put("voteUserList", voteUserList);
+        return Rx.success(resultMap);
+    }
+
 }

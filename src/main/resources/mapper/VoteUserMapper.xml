@@ -53,6 +53,7 @@
         from t_vote_user
         where vote_id = #{voteId,jdbcType=BIGINT}
         and opt_id = #{optId,jdbcType=BIGINT}
+        and status = '1'
     </select>
     <insert id="insertBatch">
         insert into t_vote_user (user_id, address, status, vote_id, opt_id,

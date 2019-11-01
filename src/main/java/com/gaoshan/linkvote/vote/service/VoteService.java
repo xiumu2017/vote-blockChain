@@ -34,4 +34,6 @@ public interface VoteService {
     R appQueryVotePage(String address, Integer pageNum, Integer pageSize);
 
     R getAppVoteDetail(Long voteId, String address);
+
+    R delete(Long id, String address);
 }

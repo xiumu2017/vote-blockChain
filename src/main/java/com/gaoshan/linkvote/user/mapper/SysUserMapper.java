@@ -4,6 +4,8 @@ import com.gaoshan.linkvote.user.bean.SysUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * @author Paradise
  */
@@ -68,4 +70,6 @@ public interface SysUserMapper {
     SysUser selectByAddress(@Param("address") String address);
 
     int changePassword(@Param("id") Long id, @Param("encodePassword") String encodePassword);
+
+    List<SysUser> selectUsersByVoteId(@Param("voteId") Long voteId);
 }

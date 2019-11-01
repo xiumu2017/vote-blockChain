@@ -116,15 +116,11 @@ public class VoteAppController {
 
     @ApiOperation("删除投票")
     @DeleteMapping("/del")
-    public R delVote(Long id) {
+    public R delVote(Long id,String address) {
         if (id == null) {
             return Rx.error("参数为空异常！");
         }
-        if (voteService.deleteByPrimaryKey(id) == 1) {
-            return Rx.success();
-        } else {
-            return Rx.fail();
-        }
+        return voteService.delete(id,address);
     }
 
     /**

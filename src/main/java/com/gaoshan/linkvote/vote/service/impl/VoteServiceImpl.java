@@ -200,6 +200,20 @@ public class VoteServiceImpl implements VoteService {
     public R appQueryVotePage(String address, Integer pageNum, Integer pageSize) {
         PageHelper.startPage(pageNum, pageSize);
         List<Vote> list = voteMapper.selectByApp();
+        SysUser sysUser = userMapper.selectByAddress(address);
+        if (!list.isEmpty()) {
+            for (Vote vote : list) {
+                List<VoteOption> optionList = optionMapper.selectByVoteId(vote.getId());
+                vote.setOptionList(optionList);
+                SysUser user = userMapper.selectByPrimaryKey(vote.getCreateUser());
+                vote.setCreateUserName(user.getName());
+                vote.setCreateUserPic(user.getPic());
+                if (sysUser != null) {
+                    List<VoteUser> voteUserList = voteUserMapper.selectByVoteIdAndUserId(vote.getId(), sysUser.getId());
+                    vote.setVoteUserList(voteUserList);
+                }
+            }
+        }
         return Rx.success(new PageInfo<>(list));
     }
 
@@ -207,7 +221,7 @@ public class VoteServiceImpl implements VoteService {
     public R getAppVoteDetail(Long voteId, String address) {
         // 查询投票信息
         Vote vote = voteMapper.selectByPrimaryKey(voteId);
-        if (vote == null){
+        if (vote == null) {
             return Rx.error("投票不存在或已删除");
         }
         // 查询选项信息和统计数量
@@ -222,7 +236,26 @@ public class VoteServiceImpl implements VoteService {
         resultMap.put("vote", vote);
         resultMap.put("optionList", optionList);
         resultMap.put("voteUserList", voteUserList);
+        // 查询 已投的用户信息
+        List<SysUser> userList = userMapper.selectUsersByVoteId(voteId);
+        resultMap.put("userList", userList);
         return Rx.success(resultMap);
+    }
+
+    @Override
+    public R delete(Long id, String address) {
+        Vote vote = voteMapper.selectByPrimaryKey(id);
+        if (vote == null) {
+            return Rx.error("投票不存在或已删除");
+        }
+        SysUser user = userMapper.selectByAddress(address);
+        if (user == null || !user.getId().equals(vote.getCreateUser())) {
+            return Rx.error("没有权限");
+        }
+        if (voteMapper.deleteByPrimaryKey(id) == 1) {
+            return Rx.success();
+        }
+        return Rx.fail();
     }
 
 }

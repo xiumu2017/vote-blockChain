@@ -7,6 +7,7 @@ import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author Paradise
@@ -60,4 +61,26 @@ public class Vote {
     private Date createTime;
     @ApiModelProperty(hidden = true)
     private Date updateTime;
+
+    /**
+     * 投票选项列表
+     */
+    @ApiModelProperty(hidden = true)
+    private List<VoteOption> optionList;
+    /**
+     * 投票用户选项列表
+     */
+    @ApiModelProperty(hidden = true)
+    private List<VoteUser> voteUserList;
+
+    /**
+     * 创建人 - 昵称
+     */
+    @ApiModelProperty(hidden = true)
+    private String createUserName;
+    /**
+     * 创建人 - 头像url
+     */
+    @ApiModelProperty(hidden = true)
+    private String createUserPic;
 }

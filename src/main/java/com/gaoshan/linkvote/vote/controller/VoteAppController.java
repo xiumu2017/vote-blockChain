@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -79,10 +80,12 @@ public class VoteAppController {
     @ApiImplicitParams({@ApiImplicitParam(name = "optionJson", value = "选项JSON数据",
             example = "[{index:1,content:'同意'},{index:2,content:'反对'}]", required = true),
             @ApiImplicitParam(name = "address", value = "地址", required = true)})
-    @PostMapping("/create")
+    @RequestMapping("/create")
     public R addVote(@ApiParam("投票实体") Vote vote,
                      String optionJson,
-                     String address) {
+                     String address,
+                     HttpServletRequest request) {
+        request.getParameter("address");
         try {
             if (StringUtils.isBlank(address)) {
                 return Rx.error("地址信息为空");
@@ -133,12 +136,15 @@ public class VoteAppController {
      */
     @ApiOperation("分页查询投票列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(value = "地址"),
-            @ApiImplicitParam(value = "pageNum"),
-            @ApiImplicitParam(value = "pageSize"),
+            @ApiImplicitParam(name = "address", value = "地址"),
+            @ApiImplicitParam(name = "pageNum", value = "pageNum"),
+            @ApiImplicitParam(name = "pageSize", value = "pageSize"),
     })
     @GetMapping("/queryVotePage")
     public R appQueryVotePage(String address, Integer pageNum, Integer pageSize) {
+        if (StringUtils.isBlank(address)) {
+            return Rx.error("地址信息为空");
+        }
         return Rx.success(voteService.appQueryVotePage(address, pageNum, pageSize));
     }
 
@@ -152,7 +158,7 @@ public class VoteAppController {
     @ApiOperation("查询投票详情")
     @GetMapping("/getVoteDetail")
     public R getAppVoteDetail(Long voteId, String address) {
-        if (voteId == null) {
+        if (voteId == null || StringUtils.isBlank(address)) {
             return Rx.error("参数为空异常！");
         }
         return voteService.getAppVoteDetail(voteId, address);
@@ -161,6 +167,9 @@ public class VoteAppController {
     @ApiOperation("查看选项")
     @GetMapping("/getVoteOptionDetail")
     public R getVoteOptionDetail(Long optionId) {
+        if (optionId == null) {
+            return Rx.error("选项id为空");
+        }
         return voteService.getVoteOptionDetail(optionId);
     }
 
@@ -173,9 +182,9 @@ public class VoteAppController {
      * @return {@link R}
      */
     @ApiOperation("用户投票")
-    @PostMapping("/doVote")
-    @ApiImplicitParams({@ApiImplicitParam(name = "voteId",value = "投票id"),
-            @ApiImplicitParam(name = "options",value = "选项id，多选英文逗号分隔"),
+    @RequestMapping("/doVote")
+    @ApiImplicitParams({@ApiImplicitParam(name = "voteId", value = "投票id"),
+            @ApiImplicitParam(name = "options", value = "选项id，多选英文逗号分隔"),
             @ApiImplicitParam(name = "address", value = "地址")})
     public R vote(Long voteId, String options, String address) {
         return voteService.doVoteApp(voteId, options, address);
@@ -183,8 +192,8 @@ public class VoteAppController {
 
     @ApiOperation("更新用户投票上链的Hash")
     @ApiImplicitParams({@ApiImplicitParam(name = "address", value = "地址"),
-            @ApiImplicitParam(name = "voteId",value = "投票id"),
-            @ApiImplicitParam(name = "hash",value = "交易Hash")})
+            @ApiImplicitParam(name = "voteId", value = "投票id"),
+            @ApiImplicitParam(name = "hash", value = "交易Hash")})
     @PostMapping("/updateAppVoteHash")
     public R updateAppVoteHash(String address, Long voteId, String hash) {
         return voteService.updateAppVoteHash(address, voteId, hash);

@@ -88,12 +88,8 @@
     </update>
     <select id="selectUnConfirmedHash" resultMap="BaseResultMap">
         select <include refid="Base_Column_List"/>
-        from t_vote_user t,(
-        select user_id,vote_id
         from t_vote_user
-        where status = '0'
-          and hash is not null
-        group by user_id, vote_id) r
-        where t.user_id = r.user_id and r.vote_id = t.vote_id
+        where hash is not null
+        group by `hash`
     </select>
 </mapper>

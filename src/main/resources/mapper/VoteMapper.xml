@@ -22,7 +22,7 @@
     <sql id="Base_Column_List">
         <!--@mbg.generated-->
         id, topic, `desc`, file_id, `type`, `status`, is_del, limit_num, start_time, end_time, create_user,
-        update_user, create_time, update_time
+        update_user, create_time, update_time, hash
     </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
         <!--@mbg.generated-->
@@ -161,6 +161,9 @@
             <if test="updateUser != null">
                 update_user = #{updateUser,jdbcType=BIGINT},
             </if>
+            <if test="hash != null and hash != ''">
+                hash = #{hash,jdbcType=VARCHAR},
+            </if>
             update_time = now(),
         </set>
         where id = #{id,jdbcType=BIGINT}
@@ -224,6 +227,7 @@
         from t_vote
         where is_del = 0
         and status = 0
+        and hash is not null
     </select>
 
     <update id="updateStatus">

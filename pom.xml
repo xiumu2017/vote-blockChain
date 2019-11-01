@@ -94,8 +94,6 @@
             <groupId>org.chain3j</groupId>
             <artifactId>core</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>D:/GaoShanProject/link-vote/jar/core_main.jar</systemPath>
         </dependency>
     </dependencies>
 

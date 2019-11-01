@@ -31,7 +31,7 @@ public class HashQueryScheduleJob {
     private VoteUserMapper voteUserMapper;
 
     @Value("${vnodeAddress}")
-    private static String vnodeAddress;
+    private String vnodeAddress;
     @Value("${expireMinute}")
     private Long expireMinute;
 
@@ -41,18 +41,19 @@ public class HashQueryScheduleJob {
     @Scheduled(cron = "0 0/2 * * * ? ")
     public void updateVoteStatus() {
         int y = voteMapper.updateBlockSuccessToIng();
-        log.info(">>> 定时任务 上链成功的投票设置为进行中：" + y);
+        log.info("--->>> 定时任务 上链成功的投票设置为进行中：" + y);
         // 超过截止时间的设置为已截止
         int x = voteMapper.setEndedStatus();
-        log.info(">>> 超过截止时间的设置为已截止 :" + x);
+        log.info("--->>> 超过截止时间的设置为已截止 :" + x);
     }
 
     /**
      * 定时任务，多线程扫描未确认的Hash
      * 判断扫描时长或次数，超时判定失败
      */
-    @Scheduled(cron = "0 0/5 * * * ? ")
+    @Scheduled(cron = "0 0/2 * * * ? ")
     public void hashQuery() {
+        log.info("定时任务，多线程扫描未确认的Hash >>> ");
         List<Vote> voteList = voteMapper.selectUnConfirmedHash();
         List<VoteUser> voteUserList = voteUserMapper.selectUnConfirmedHash();
         //Common Thread Pool
@@ -64,7 +65,7 @@ public class HashQueryScheduleJob {
 
         for (Vote vote : voteList) {
             completionService.submit(() -> {
-                log.info(">>> 提交投票Hash任务：" + vote.getTopic());
+                log.info(">>> 提交投票Hash任务：Topic: " + vote.getTopic());
                 blockChainQueryVote(vote);
                 return null;
             });
@@ -75,22 +76,19 @@ public class HashQueryScheduleJob {
                 return null;
             });
         }
-
     }
 
     /**
      * 查询 用户投票上链结果
      *
      * @param voteUser 用户投票信息
-     * @throws IOException {@link Chain3j} 网络异常，链上通信
      */
-    private void blockChainQuery(VoteUser voteUser) throws IOException {
+    private void blockChainQuery(VoteUser voteUser) {
         if (chain3jHashQuery(voteUser.getHash())) {
             // 更新投票选择状态
             voteUserMapper.updateStatus(voteUser.getVoteId(), voteUser.getUserId(), "1");
-        }
-        // 判断创建时间，是否超时
-        if (checkExpired(voteUser.getVoteTime(), expireMinute)) {
+        } else if (checkExpired(voteUser.getVoteTime(), expireMinute)) {
+            // 判断创建时间，是否超时
             voteUserMapper.updateStatus(voteUser.getVoteId(), voteUser.getUserId(), "2");
         }
     }
@@ -99,15 +97,13 @@ public class HashQueryScheduleJob {
      * 查询投票信息上链结果
      *
      * @param vote 投票信息
-     * @throws IOException 网络异常
      */
-    private void blockChainQueryVote(Vote vote) throws IOException {
+    private void blockChainQueryVote(Vote vote) {
         if (chain3jHashQuery(vote.getHash())) {
             // 更新投票状态
+            log.info("// 更新投票状态");
             voteMapper.updateStatus(vote.getId(), Vote_Status.BLOCK_SUCCESS.getCode());
-        }
-        // 判断创建时间，是否超时
-        if (checkExpired(vote.getCreateTime(), expireMinute)) {
+        } else if (checkExpired(vote.getCreateTime(), expireMinute)) {
             voteMapper.updateStatus(vote.getId(), Vote_Status.BLOCK_FAIL.getCode());
         }
     }
@@ -117,18 +113,27 @@ public class HashQueryScheduleJob {
      *
      * @param hash 交易hash
      * @return true 交易上链成功 false 失败
-     * @throws IOException 网络异常
      */
-    private boolean chain3jHashQuery(String hash) throws IOException {
+    private boolean chain3jHashQuery(String hash) {
         // 查询 moac 交易状态
+        log.info(">>> start block query, Hash: " + hash);
+        log.info(">>> start block query, vnodeAddress: " + vnodeAddress);
         Chain3j chain3j = Chain3j.build(new HttpService(vnodeAddress));
-        TransactionReceipt transactionReceipt = chain3j.mcGetTransactionReceipt(hash).send().getResult();
-        boolean txStatus = transactionReceipt.isStatusOK();
-        if (txStatus) {
-            Transaction transaction = chain3j.mcGetTransactionByHash(hash).send().getResult();
-            // 校验 input data
-            log.info(transaction.getInput());
-            return true;
+        TransactionReceipt transactionReceipt;
+        try {
+            transactionReceipt = chain3j.mcGetTransactionReceipt(hash).send().getResult();
+            log.info("transactionReceipt-Status:" + transactionReceipt.getStatus());
+            boolean txStatus = transactionReceipt.isStatusOK();
+            if (txStatus) {
+                Transaction transaction;
+                transaction = chain3j.mcGetTransactionByHash(hash).send().getResult();
+                // 校验 input data
+                log.info(transaction.getInput());
+                return true;
+            }
+        } catch (IOException e) {
+            log.error(e.getLocalizedMessage(), e);
+            return false;
         }
         return false;
     }
@@ -146,5 +151,18 @@ public class HashQueryScheduleJob {
         createCalendar.setTime(createTime);
         long min = (now.getTimeInMillis() - createCalendar.getTimeInMillis()) / 1000 * 60;
         return min > expireMinutes;
+    }
+
+    public static void main(String[] args) throws IOException {
+        // 查询 moac 交易状态
+        Chain3j chain3j = Chain3j.build(new HttpService("https://chain3.mytokenpocket.vip"));
+        String hash = "0x8165af34c1395f7c89f9528575dc288a3e558ce9b4f87a06b76539c206d1f0c5";
+        TransactionReceipt transactionReceipt = chain3j.mcGetTransactionReceipt(hash).send().getResult();
+        boolean txStatus = transactionReceipt.isStatusOK();
+        if (txStatus) {
+            Transaction transaction = chain3j.mcGetTransactionByHash(hash).send().getResult();
+            // 校验 input data
+            log.info(transaction.getInput());
+        }
     }
 }

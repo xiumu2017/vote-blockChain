@@ -186,7 +186,7 @@
         where id in (
             select user_id from t_vote_user
             where vote_id = #{voteId}
-            and t_vote_user.status = '1'
+            -- and t_vote_user.status = '1'
             group by user_id)
     </select>
 </mapper>

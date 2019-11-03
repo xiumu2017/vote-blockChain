@@ -232,6 +232,12 @@ public class VoteServiceImpl implements VoteService {
         Map<String, Object> resultMap = new HashMap<>();
         // 查询当前用户信息以及用户投票信息
         SysUser user = userMapper.selectByAddress(address);
+        if (user == null) {
+            SysUser sysUser = new SysUser();
+            sysUser.setAddress(address);
+            userMapper.insert(sysUser);
+            user = sysUser;
+        }
         List<VoteUser> voteUserList = voteUserMapper.selectByVoteIdAndUserId(voteId, user.getId());
         resultMap.put("vote", vote);
         resultMap.put("optionList", optionList);

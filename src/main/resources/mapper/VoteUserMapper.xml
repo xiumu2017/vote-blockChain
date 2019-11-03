@@ -53,15 +53,15 @@
         from t_vote_user
         where vote_id = #{voteId,jdbcType=BIGINT}
         and opt_id = #{optId,jdbcType=BIGINT}
-        and status = '1'
+        -- and status = '1'
     </select>
     <insert id="insertBatch">
         insert into t_vote_user (user_id, address, status, vote_id, opt_id,
         vote_time)
         values
-        <foreach collection="optionIdList" open="(" close=")" separator="," item="item">
-            #{userId,jdbcType=BIGINT}, #{address,jdbcType=VARCHAR}, '0', #{voteId,jdbcType=BIGINT},
-            #{item,jdbcType=BIGINT}, now()
+        <foreach collection="optionIdList" separator="," item="item">
+            (#{userId,jdbcType=BIGINT}, #{address,jdbcType=VARCHAR}, '0', #{voteId,jdbcType=BIGINT},
+            #{item,jdbcType=BIGINT}, now())
         </foreach>
     </insert>
 
@@ -91,6 +91,7 @@
         select <include refid="Base_Column_List"/>
         from t_vote_user
         where hash is not null
+        and status = '0'
         group by `hash`
     </select>
 </mapper>

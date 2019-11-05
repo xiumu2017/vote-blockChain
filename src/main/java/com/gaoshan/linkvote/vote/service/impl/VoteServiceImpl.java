@@ -42,7 +42,7 @@ public class VoteServiceImpl implements VoteService {
     public R insert(Vote record, String optionJson, String address) {
         SysUser user = userMapper.selectByAddress(address);
         if (user == null) {
-            return Rx.error("地址信息未入库");
+            user = initUser(address);
         }
         List<VoteOption> optionList = JSONArray.parseArray(optionJson, VoteOption.class);
         if (optionList.size() < 2) {
@@ -60,6 +60,7 @@ public class VoteServiceImpl implements VoteService {
                 optionMapper.insert(option);
             }
         }
+        record.setOptionList(optionMapper.selectByVoteId(record.getId()));
         return Rx.success(record);
     }
 
@@ -155,10 +156,7 @@ public class VoteServiceImpl implements VoteService {
         }
         SysUser user = userMapper.selectByAddress(address);
         if (user == null) {
-            SysUser sysUser = new SysUser();
-            sysUser.setAddress(address);
-            userMapper.insert(sysUser);
-            user = sysUser;
+            user = initUser(address);
         }
         // 判断选项合理性
         String[] optionArr = options.split(",");
@@ -233,10 +231,7 @@ public class VoteServiceImpl implements VoteService {
         // 查询当前用户信息以及用户投票信息
         SysUser user = userMapper.selectByAddress(address);
         if (user == null) {
-            SysUser sysUser = new SysUser();
-            sysUser.setAddress(address);
-            userMapper.insert(sysUser);
-            user = sysUser;
+            user = initUser(address);
         }
         List<VoteUser> voteUserList = voteUserMapper.selectByVoteIdAndUserId(voteId, user.getId());
         resultMap.put("vote", vote);
@@ -262,6 +257,15 @@ public class VoteServiceImpl implements VoteService {
             return Rx.success();
         }
         return Rx.fail();
+    }
+
+    private SysUser initUser(String address) {
+        SysUser user = new SysUser();
+        user.setAddress(address);
+        user.setName(address.substring(Math.min(address.length(), 10)));
+        user.setStatus("1");
+        userMapper.insert(user);
+        return user;
     }
 
 }

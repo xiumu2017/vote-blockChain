@@ -16,6 +16,19 @@ import java.util.List;
 @ApiModel("投票实体")
 public class Vote {
 
+    public Vote() {
+    }
+
+    public Vote(VoteModel model) {
+        this.topic = model.getTopic();
+        this.desc = model.getDesc();
+        this.picUrl = model.getPicUrl();
+        this.endTime = model.getEndTime();
+        this.startTime = model.getStartTime();
+        this.limitNum = model.getLimitNum();
+    }
+
+
     @ApiModelProperty(value = "投票id", hidden = true)
     private Long id;
 
@@ -25,8 +38,11 @@ public class Vote {
     @ApiModelProperty("投票描述")
     private String desc;
 
-    @ApiModelProperty(value = "投票图片Id", required = true)
+    @ApiModelProperty(value = "投票图片Id", hidden = true)
     private Long fileId;
+
+    @ApiModelProperty(value = "投票图片url", required = true)
+    private String picUrl;
 
     @ApiModelProperty(value = "投票类型", hidden = true)
     private String type;

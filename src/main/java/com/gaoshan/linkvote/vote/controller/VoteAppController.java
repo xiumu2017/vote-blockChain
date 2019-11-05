@@ -5,6 +5,7 @@ import com.gaoshan.linkvote.base.Rx;
 import com.gaoshan.linkvote.sys.entity.SysFile;
 import com.gaoshan.linkvote.sys.service.SysFileService;
 import com.gaoshan.linkvote.vote.entity.Vote;
+import com.gaoshan.linkvote.vote.entity.VoteModel;
 import com.gaoshan.linkvote.vote.service.VoteService;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,10 @@ public class VoteAppController {
 
     @ApiOperation("图片上传")
     @PostMapping("/uploadImage")
-    public R uploadImage(MultipartFile img) {
+    public R uploadImage(MultipartFile img, HttpServletRequest request) {
+        String url = "http://" + request.getRemoteAddr() + ":" + request.getServerPort() + request.getContextPath();
+        url = url + "/vote/showPic?fileId=";
+        log.info(url);
         if (img != null) {
             SysFile sysFile = new SysFile();
             File dir = new File(filePath + File.separator + formatDate());
@@ -57,7 +61,7 @@ public class VoteAppController {
                 sysFile.setFilePath(file.getAbsolutePath());
                 sysFile.setFileSize(Math.toIntExact(img.getSize()));
                 sysFileService.insert(sysFile);
-                return Rx.success(sysFile);
+                return Rx.success(url + sysFile.getId());
             } catch (IOException e) {
                 log.error(e.getLocalizedMessage());
                 return Rx.error(e.getLocalizedMessage());
@@ -80,12 +84,10 @@ public class VoteAppController {
     @ApiImplicitParams({@ApiImplicitParam(name = "optionJson", value = "选项JSON数据",
             example = "[{index:1,content:'同意'},{index:2,content:'反对'}]", required = true),
             @ApiImplicitParam(name = "address", value = "地址", required = true)})
-    @RequestMapping("/create")
-    public R addVote(@ApiParam("投票实体") Vote vote,
+    @RequestMapping(value = "/create", method = RequestMethod.POST)
+    public R addVote(@ApiParam("投票实体") VoteModel voteModel,
                      String optionJson,
-                     String address,
-                     HttpServletRequest request) {
-        request.getParameter("address");
+                     String address) {
         try {
             if (StringUtils.isBlank(address)) {
                 return Rx.error("地址信息为空");
@@ -96,7 +98,7 @@ public class VoteAppController {
         } catch (Exception e) {
             return Rx.error("500", "投票选项数据解析错误" + e.getLocalizedMessage());
         }
-        return voteService.insert(vote, optionJson, address);
+        return voteService.insert(new Vote(voteModel), optionJson, address);
     }
 
     @ApiOperation("更新投票的上链Hash")
@@ -107,6 +109,8 @@ public class VoteAppController {
         }
         if (StringUtils.isBlank(hash)) {
             return Rx.error("Hash不能为空");
+        } else if (!hash.startsWith("0x")) {
+            return Rx.error("Hash 格式不正确");
         }
         if (voteId == null) {
             return Rx.error("投票ID为空");
@@ -116,11 +120,11 @@ public class VoteAppController {
 
     @ApiOperation("删除投票")
     @DeleteMapping("/del")
-    public R delVote(Long id,String address) {
+    public R delVote(Long id, String address) {
         if (id == null) {
             return Rx.error("参数为空异常！");
         }
-        return voteService.delete(id,address);
+        return voteService.delete(id, address);
     }
 
     /**
@@ -178,7 +182,7 @@ public class VoteAppController {
      * @return {@link R}
      */
     @ApiOperation("用户投票")
-    @RequestMapping("/doVote")
+    @RequestMapping(value = "/doVote", method = RequestMethod.POST)
     @ApiImplicitParams({@ApiImplicitParam(name = "voteId", value = "投票id"),
             @ApiImplicitParam(name = "options", value = "选项id，多选英文逗号分隔"),
             @ApiImplicitParam(name = "address", value = "地址")})
@@ -192,6 +196,18 @@ public class VoteAppController {
             @ApiImplicitParam(name = "hash", value = "交易Hash")})
     @PostMapping("/updateAppVoteHash")
     public R updateAppVoteHash(String address, Long voteId, String hash) {
+        if (StringUtils.isBlank(address)) {
+            return Rx.error("address不能为空");
+        }
+        if (voteId == null) {
+            return Rx.error("voteId 不能为空");
+        }
+        if (StringUtils.isBlank(hash)) {
+            return Rx.error("Hash 不能为空");
+        }
+        if (!hash.startsWith("0x")) {
+            return Rx.error("Hash 格式不正确");
+        }
         return voteService.updateAppVoteHash(address, voteId, hash);
     }
 

@@ -8,6 +8,7 @@
         <result column="topic" jdbcType="VARCHAR" property="topic"/>
         <result column="desc" jdbcType="VARCHAR" property="desc"/>
         <result column="file_id" jdbcType="BIGINT" property="fileId"/>
+        <result column="picUrl" jdbcType="VARCHAR" property="picUrl"/>
         <result column="type" jdbcType="VARCHAR" property="type"/>
         <result column="status" jdbcType="CHAR" property="status"/>
         <result column="is_del" jdbcType="CHAR" property="isDel"/>
@@ -21,7 +22,7 @@
     </resultMap>
     <sql id="Base_Column_List">
         <!--@mbg.generated-->
-        id, topic, `desc`, file_id, `type`, `status`, is_del, limit_num, start_time, end_time, create_user,
+        id, topic, `desc`, file_id, picUrl, `type`, `status`, is_del, limit_num, start_time, end_time, create_user,
         update_user, create_time, update_time, hash
     </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -43,11 +44,11 @@
         insert into t_vote (topic, `desc`, file_id,
         `type`, `status`, is_del, start_time,
         end_time, create_user, update_user,
-        create_time, update_time, limit_num)
+        create_time, update_time, limit_num,picUrl)
         values (#{topic,jdbcType=VARCHAR}, #{desc,jdbcType=VARCHAR}, #{fileId,jdbcType=BIGINT},
         #{type,jdbcType=VARCHAR}, '0', '0', #{startTime,jdbcType=TIMESTAMP},
         #{endTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=BIGINT}, #{updateUser,jdbcType=BIGINT},
-        now(), now(), #{limitNum,jdbcType=INTEGER})
+        now(), now(), #{limitNum,jdbcType=INTEGER},#{picUrl,jdbcType=VARCHAR})
     </insert>
     <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.gaoshan.linkvote.vote.entity.Vote"
             useGeneratedKeys="true">
@@ -62,6 +63,9 @@
             </if>
             <if test="fileId != null">
                 file_id,
+            </if>
+            <if test="picUrl != null and picUrl != ''">
+                picUrl,
             </if>
             <if test="type != null">
                 `type`,
@@ -101,6 +105,10 @@
             <if test="fileId != null">
                 #{fileId,jdbcType=BIGINT},
             </if>
+            <if test="picUrl != null and picUrl != ''">
+                #{picUrl,jdbcType=VARCHAR},
+            </if>
+
             <if test="type != null">
                 #{type,jdbcType=VARCHAR},
             </if>

@@ -4,6 +4,7 @@ import com.gaoshan.linkvote.base.R;
 import com.gaoshan.linkvote.base.component.UmsPermission;
 import com.gaoshan.linkvote.user.bean.RegisterBean;
 import com.gaoshan.linkvote.user.bean.SysUser;
+import com.gaoshan.linkvote.user.bean.UserQuery;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -14,15 +15,13 @@ public interface SysUserService {
 
     int deleteByPrimaryKey(Long id);
 
-    int insert(SysUser record);
+    R delAdminUser(Principal principal, Long userId);
 
-    int insertSelective(SysUser record);
+    int insert(SysUser record);
 
     SysUser selectByPrimaryKey(Long id);
 
     int updateByPrimaryKeySelective(SysUser record);
-
-    int updateByPrimaryKey(SysUser record);
 
     SysUser register(RegisterBean registerBean);
 
@@ -34,5 +33,9 @@ public interface SysUserService {
 
     SysUser selectByName(String userName);
 
+    SysUser selectByAddress(String address);
+
     R changePassword(String password, Principal principal);
+
+    R getAdminUserPage(UserQuery userQuery);
 }

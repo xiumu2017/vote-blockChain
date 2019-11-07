@@ -1,4 +1,5 @@
 package com.gaoshan.linkvote.user.mapper;
+import java.util.Date;
 
 import com.gaoshan.linkvote.user.bean.SysUser;
 import org.apache.ibatis.annotations.Mapper;
@@ -28,14 +29,6 @@ public interface SysUserMapper {
     int insert(SysUser record);
 
     /**
-     * insert record to table selective
-     *
-     * @param record the record
-     * @return insert count
-     */
-    int insertSelective(SysUser record);
-
-    /**
      * select by primary key
      *
      * @param id primary key
@@ -51,14 +44,6 @@ public interface SysUserMapper {
      */
     int updateByPrimaryKeySelective(SysUser record);
 
-    /**
-     * update record selective
-     *
-     * @param record the updated record
-     * @return update count
-     */
-    int updateByPrimaryKey(SysUser record);
-
     SysUser selectByName(@Param("name") String name);
 
     /**
@@ -69,7 +54,24 @@ public interface SysUserMapper {
      */
     SysUser selectByAddress(@Param("address") String address);
 
+    /**
+     * 修改管理员密码
+     *
+     * @param id             管理员id
+     * @param encodePassword 加密后的密码
+     * @return update result
+     */
     int changePassword(@Param("id") Long id, @Param("encodePassword") String encodePassword);
 
+    /**
+     * 根据投票id 查询用户列表
+     *
+     * @param voteId 投票id
+     * @return 用户列表信息
+     */
     List<SysUser> selectUsersByVoteId(@Param("voteId") Long voteId);
+
+    List<SysUser> selectByAll(SysUser sysUser);
+
+    int delAdminUser(Long id, Long userId);
 }

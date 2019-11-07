@@ -42,12 +42,14 @@ public class VoteAppController {
     @Value("${picFile.path}")
     private String filePath;
 
+    @Value("${picFile.serverIp}")
+    private String serverIp;
+
     @ApiOperation("图片上传")
     @PostMapping("/uploadImage")
     public R uploadImage(MultipartFile img, HttpServletRequest request) {
-        String url = "http://" + request.getRemoteAddr() + ":" + request.getServerPort() + request.getContextPath();
+        String url = "http://" + serverIp + ":" + request.getServerPort() + request.getContextPath();
         url = url + "/vote/showPic?fileId=";
-        log.info(url);
         if (img != null) {
             SysFile sysFile = new SysFile();
             File dir = new File(filePath + File.separator + formatDate());
@@ -77,7 +79,7 @@ public class VoteAppController {
      * 2. 投票选项解析，校验
      * 3. 图片保存，绝对路径，其它方案
      *
-     * @param vote       投票实体类
+     * @param voteModel  投票实体类
      * @param optionJson 投票选项数据
      */
     @ApiOperation("发起投票")

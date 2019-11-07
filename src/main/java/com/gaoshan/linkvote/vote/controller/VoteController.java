@@ -4,15 +4,15 @@ import com.gaoshan.linkvote.base.R;
 import com.gaoshan.linkvote.base.Rx;
 import com.gaoshan.linkvote.sys.entity.SysFile;
 import com.gaoshan.linkvote.sys.service.SysFileService;
-import com.gaoshan.linkvote.vote.entity.Vote;
 import com.gaoshan.linkvote.vote.entity.VoteQuery;
 import com.gaoshan.linkvote.vote.service.VoteService;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -39,32 +39,18 @@ public class VoteController {
         this.fileService = fileService;
     }
 
-    @Value("${picFile.path}")
-    private String filePath;
-
     /**
-     * 发起投票
-     * 1. 参数校验，包括选项的校验（空值，长度，时间）
-     * 2. 投票选项解析，校验
-     * 3. 图片保存，绝对路径，其它方案
+     * 分页查询
+     * 1. 不同用户看到的数据列表不同
+     * 2. 黑白名单处理
      *
-     * @param vote       投票实体类
-     * @param optionJson 投票选项数据
+     * @return 封装数据
      */
-    @ApiOperation("发起投票")
-    @ApiImplicitParams({@ApiImplicitParam(name = "optionJson", value = "选项JSON数据",
-            example = "[{index:1,content:'同意'},{index:2,content:'反对'}]", required = true)})
-    @PostMapping("/create")
-    public R addVote(@ApiParam("投票实体") Vote vote,
-                     String optionJson, String address) {
-        try {
-            if (StringUtils.isBlank(optionJson)) {
-                return Rx.error("投票选项数据为空");
-            }
-        } catch (Exception e) {
-            return Rx.error("9999", "投票选项数据解析错误" + e.getLocalizedMessage());
-        }
-        return voteService.insert(vote, optionJson, address);
+    @ApiOperation("分页查询投票列表")
+    @GetMapping("/queryVotePage")
+    public R queryVotePage(@ApiParam("分页查询实体") VoteQuery query, Principal principal) {
+        log.info(principal.getName());
+        return Rx.success(voteService.queryByPage(query));
     }
 
     @ApiOperation("删除投票")
@@ -81,25 +67,13 @@ public class VoteController {
     }
 
     /**
-     * 分页查询
-     * 1. 不同用户看到的数据列表不同
-     * 2. 黑白名单处理
-     *
-     * @return 封装数据
-     */
-    @ApiOperation("分页查询投票列表")
-    @GetMapping("/queryVotePage")
-    public R queryVotePage(@ApiParam("分页查询实体") VoteQuery query) {
-        return Rx.success(voteService.queryByPage(query));
-    }
-
-    /**
      * 查询投票详情
      *
      * @param voteId 主键
      * @return 投票详情
      * 选项列表；当前用户选择结果；当前投票统计结果；
      */
+    @ApiIgnore
     @ApiOperation("查询投票详情")
     @GetMapping("/getVoteDetail")
     public R getVoteDetail(Long voteId, Principal principal) {
@@ -115,6 +89,7 @@ public class VoteController {
      * @param optionId 选项id
      * @return {@link R}
      */
+    @ApiIgnore
     @ApiOperation("查看选项")
     @GetMapping("/getVoteOptionDetail")
     public R getVoteOptionDetail(Long optionId) {
@@ -149,7 +124,7 @@ public class VoteController {
             }
             out.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getLocalizedMessage(), e);
         }
     }
 }

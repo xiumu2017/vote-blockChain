@@ -93,17 +93,19 @@ public class VoteServiceImpl implements VoteService {
 
     @Override
     public R getVoteDetail(Long voteId, String name) {
-        Map<String, Object> resultMap = new HashMap<>();
+        // 查询投票信息
         Vote vote = voteMapper.selectByPrimaryKey(voteId);
+        // 查询选项信息和统计数量
         List<VoteOption> optionList = optionMapper.selectByVoteId(voteId);
         for (VoteOption option : optionList) {
             option.setCount(voteUserMapper.countByVoteIdAndOptId(voteId, option.getId()));
         }
-        SysUser user = userMapper.selectByName(name);
-        List<VoteUser> voteUserList = voteUserMapper.selectByVoteIdAndUserId(voteId, user.getId());
+        Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("vote", vote);
         resultMap.put("optionList", optionList);
-        resultMap.put("voteUserList", voteUserList);
+        // 查询 已投的用户信息
+        List<SysUser> userList = userMapper.selectUsersByVoteId(voteId);
+        resultMap.put("userList", userList);
         return Rx.success(resultMap);
     }
 
@@ -121,8 +123,8 @@ public class VoteServiceImpl implements VoteService {
                 SysUser sysUser = userMapper.selectByPrimaryKey(voteUser.getUserId());
                 map = new HashMap<>();
                 map.put("voteTime", voteUser.getVoteTime());
-                map.put("userName", sysUser.getName());
-                map.put("pic", sysUser.getPic());
+                map.put("userName", sysUser.getUsername());
+                map.put("pic", sysUser.getPicUrl());
                 resultList.add(map);
             }
         }
@@ -204,8 +206,8 @@ public class VoteServiceImpl implements VoteService {
                 List<VoteOption> optionList = optionMapper.selectByVoteId(vote.getId());
                 vote.setOptionList(optionList);
                 SysUser user = userMapper.selectByPrimaryKey(vote.getCreateUser());
-                vote.setCreateUserName(user.getName());
-                vote.setCreateUserPic(user.getPic());
+                vote.setCreateUserName(user.getUsername());
+                vote.setCreateUserPic(user.getPicUrl());
                 if (sysUser != null) {
                     List<VoteUser> voteUserList = voteUserMapper.selectByVoteIdAndUserId(vote.getId(), sysUser.getId());
                     vote.setVoteUserList(voteUserList);
@@ -262,7 +264,7 @@ public class VoteServiceImpl implements VoteService {
     private SysUser initUser(String address) {
         SysUser user = new SysUser();
         user.setAddress(address);
-        user.setName(address.substring(Math.min(address.length(), 10)));
+        user.setUsername(address.substring(Math.min(address.length(), 10)));
         user.setStatus("1");
         userMapper.insert(user);
         return user;

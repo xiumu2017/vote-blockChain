@@ -28,7 +28,7 @@ public class VoteModel {
     @ApiModelProperty(value = "投票图片Id", hidden = true)
     private Long fileId;
 
-    @ApiModelProperty(value = "投票图片url", required = true, example = "http://192.168.100.48:8080/moac-vote/vote/showPic?fileId=1")
+    @ApiModelProperty(value = "投票图片url", example = "http://192.168.100.48:8080/moac-vote/vote/showPic?fileId=1")
     private String picUrl;
 
     @ApiModelProperty(value = "投票限制多选数量，单选则为1", example = "1")

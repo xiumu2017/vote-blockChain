@@ -236,10 +236,12 @@
         where 1=1
         and is_del= 0
         and status <![CDATA[ >= ]]> 3
-        and id not in
-        <foreach collection="voteIdList" open="(" close=")" item="item" separator=",">
-            #{item}
-        </foreach>
+        <if test="voteIdList != null and voteIdList.size() != 0">
+            and id not in
+            <foreach open="(" close=")" collection="voteIdList" item="item" separator=",">
+                #{item}
+            </foreach>
+        </if>
     </select>
     <select id="selectUnConfirmedHash" resultMap="BaseResultMap">
         select

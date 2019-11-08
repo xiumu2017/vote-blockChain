@@ -111,7 +111,7 @@ public class VoteController {
         return voteService.getBlackPage(voteId, pageNum, pageSize);
     }
 
-    @ApiOperation("分页展示投票黑白名单列表")
+    @ApiOperation("分页展示投票白名单列表")
     @GetMapping("/getWhitePage")
     public R getWhitePage(Long voteId, Integer pageNum, Integer pageSize) {
         if (voteId == null) {

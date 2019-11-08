@@ -99,4 +99,10 @@ public class Vote {
      */
     @ApiModelProperty(hidden = true)
     private String createUserPic;
+
+    @ApiModelProperty(hidden = true)
+    private Long blackId;
+    @ApiModelProperty(hidden = true)
+    private Long whiteId;
+
 }

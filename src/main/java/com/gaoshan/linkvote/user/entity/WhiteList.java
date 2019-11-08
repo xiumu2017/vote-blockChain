@@ -18,4 +18,12 @@ public class WhiteList extends BaseEntity {
 
     @ApiModelProperty(value = "白名单备注")
     private String desc;
+
+    public WhiteList(String name, String desc) {
+        this.name = name;
+        this.desc = desc;
+    }
+
+    public WhiteList() {
+    }
 }

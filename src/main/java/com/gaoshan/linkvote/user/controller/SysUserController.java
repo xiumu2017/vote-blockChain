@@ -41,6 +41,7 @@ public class SysUserController {
         this.adminService = adminService;
     }
 
+    @ApiIgnore
     @ApiOperation(value = "用户注册")
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     @ResponseBody
@@ -71,7 +72,7 @@ public class SysUserController {
     @ApiOperation(value = "管理员修改密码")
     @RequestMapping(value = "/changePassword", method = RequestMethod.POST)
     @ResponseBody
-    public R changePassword(@RequestBody String password, Principal principal) {
+    public R changePassword(@RequestBody String password, @ApiIgnore Principal principal) {
         if (StringUtils.isBlank(password)) {
             return Rx.error("密码不能为空");
         }

@@ -4,7 +4,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.gaoshan.linkvote.base.R;
 import com.gaoshan.linkvote.base.Rx;
 import com.gaoshan.linkvote.user.bean.SysUser;
-import com.gaoshan.linkvote.user.mapper.SysUserMapper;
+import com.gaoshan.linkvote.user.entity.BlackList;
+import com.gaoshan.linkvote.user.entity.BlackUser;
+import com.gaoshan.linkvote.user.entity.WhiteList;
+import com.gaoshan.linkvote.user.entity.WhiteUser;
+import com.gaoshan.linkvote.user.mapper.*;
 import com.gaoshan.linkvote.vote.entity.*;
 import com.gaoshan.linkvote.vote.mapper.VoteMapper;
 import com.gaoshan.linkvote.vote.mapper.VoteOptionMapper;
@@ -12,15 +16,19 @@ import com.gaoshan.linkvote.vote.mapper.VoteUserMapper;
 import com.gaoshan.linkvote.vote.service.VoteService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.BufferedReader;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
+@Slf4j
 @Service
 public class VoteServiceImpl implements VoteService {
 
@@ -32,6 +40,14 @@ public class VoteServiceImpl implements VoteService {
     private SysUserMapper userMapper;
     @Resource
     private VoteUserMapper voteUserMapper;
+    @Resource
+    private BlackUserMapper blackUserMapper;
+    @Resource
+    private WhiteUserMapper whiteUserMapper;
+    @Resource
+    private BlackListMapper blackListMapper;
+    @Resource
+    private WhiteListMapper whiteListMapper;
 
     @Override
     public int deleteByPrimaryKey(Long id) {
@@ -41,8 +57,9 @@ public class VoteServiceImpl implements VoteService {
     @Override
     public R insert(Vote record, String optionJson, String address) {
         SysUser user = userMapper.selectByAddress(address);
-        if (user == null) {
-            user = initUser(address);
+        if (user == null || user.getIsAdmin() != 1) {
+//            user = initUser(address);
+            return Rx.error("没有操作权限");
         }
         List<VoteOption> optionList = JSONArray.parseArray(optionJson, VoteOption.class);
         if (optionList.size() < 2) {
@@ -172,16 +189,24 @@ public class VoteServiceImpl implements VoteService {
         }
         // 选项入库
         List<Long> optionIdList = new ArrayList<>();
+        List<String> indexList = new ArrayList<>();
+        VoteOption option;
         for (String optionId : optionArr) {
-            if (optionMapper.selectByPrimaryKey(Long.valueOf(optionId)) == null) {
+            option = optionMapper.selectByPrimaryKey(Long.valueOf(optionId));
+            if (option == null) {
                 return Rx.error("投票选项id不存在");
             } else {
+                indexList.add(option.getIndex());
                 optionIdList.add(Long.valueOf(optionId));
             }
         }
         voteUserMapper.insertBatch(user.getId(), address, voteId, optionIdList);
         // 处理返回的json
-        return Rx.success(voteId + File.separator + options);
+        Map<String, Object> resMap = new HashMap<>();
+        resMap.put("voteId", voteId);
+        resMap.put("hash", vote.getHash());
+        resMap.put("indexList", indexList);
+        return Rx.success(resMap);
     }
 
     @Override
@@ -198,8 +223,14 @@ public class VoteServiceImpl implements VoteService {
 
     @Override
     public R appQueryVotePage(String address, Integer pageNum, Integer pageSize) {
+        // 黑白名单处理
+        // 根据用户address 查询 黑名单 list，关联投票id； 排除这些投票 not in
+        List<String> voteIdListBlack = voteMapper.selectByBlackAddress(address);
+        // 查询全部 白名单投票 list ; 判断当前地址是否包含在内，不包含则 排除
+        List<String> voteIdListWhite = voteMapper.selectByWhiteAddress(address);
+        voteIdListBlack.addAll(voteIdListWhite);
         PageHelper.startPage(pageNum, pageSize);
-        List<Vote> list = voteMapper.selectByApp();
+        List<Vote> list = voteMapper.selectByApp(voteIdListBlack);
         SysUser sysUser = userMapper.selectByAddress(address);
         if (!list.isEmpty()) {
             for (Vote vote : list) {
@@ -259,6 +290,138 @@ public class VoteServiceImpl implements VoteService {
             return Rx.success();
         }
         return Rx.fail();
+    }
+
+    @Override
+    public R addVoteBWList(MultipartFile file, Long voteId, String type) {
+        // 文件解析成号码列表
+        List<String> addressList = new ArrayList<>();
+        try {
+            addressList = dealTxtFile(file);
+        } catch (IOException e) {
+            log.error(e.getLocalizedMessage(), e);
+        }
+        if (addressList.size() < 1) {
+            return Rx.error("地址列表为空");
+        }
+        // 判断是否已有黑白名单；有则去重追加；否则新增
+        Vote vote = voteMapper.selectByPrimaryKey(voteId);
+        if (type.equals("black")) {
+            if (vote.getBlackId() != null) {
+                List<BlackUser> blackUserList = blackUserMapper.selectAllByBlackId(vote.getBlackId());
+                Map<String, Long> map = listToMap(blackUserList);
+                for (String address : addressList) {
+                    if (map.get(address) == null) {
+                        map.put(address, 0L);
+                        blackUserMapper.insert(new BlackUser(vote.getBlackId(), address));
+                    }
+                }
+            } else {
+                // 新增一个 black_list
+                BlackList blackList = new BlackList(file.getName(), file.getOriginalFilename() + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
+                blackListMapper.insert(blackList);
+                // 批量保存 black_user
+                if (blackList.getId() != null) {
+                    blackUserMapper.batchInsert(blackList.getId(), addressList);
+                }
+                // 更新投票的黑名单id
+                Vote v = new Vote();
+                v.setId(voteId);
+                v.setBlackId(blackList.getId());
+                voteMapper.updateByPrimaryKeySelective(v);
+            }
+        } else if (type.equals("white")) {
+            if (vote.getWhiteId() != null) {
+                List<WhiteUser> whiteUserList = whiteUserMapper.selectAllByWhiteId(vote.getWhiteId());
+                Map<String, Long> map = listToMap2(whiteUserList);
+                for (String address : addressList) {
+                    if (map.get(address) == null) {
+                        map.put(address, 0L);
+                        whiteUserMapper.insert(new WhiteUser(vote.getBlackId(), address));
+                    }
+                }
+            } else {
+                // 新增一个 black_list
+                WhiteList whiteList = new WhiteList(file.getName(), file.getOriginalFilename() + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
+                whiteListMapper.insert(whiteList);
+                // 批量保存 black_user
+                if (whiteList.getId() != null) {
+                    whiteUserMapper.batchInsert(whiteList.getId(), addressList);
+                }
+                // 更新投票的黑名单id
+                Vote v = new Vote();
+                v.setId(voteId);
+                v.setWhiteId(whiteList.getId());
+                voteMapper.updateByPrimaryKeySelective(v);
+            }
+        }
+        return Rx.success();
+    }
+
+    @Override
+    public R getBlackPage(Long voteId, Integer pageNum, Integer pageSize) {
+        Vote vote = voteMapper.selectByPrimaryKey(voteId);
+        PageHelper.startPage(pageNum, pageSize);
+        List<BlackUser> addressList = blackUserMapper.selectAllByBlackId(vote.getBlackId());
+        return Rx.success(new PageInfo<>(addressList));
+    }
+
+    @Override
+    public R getWhitePage(Long voteId, Integer pageNum, Integer pageSize) {
+        Vote vote = voteMapper.selectByPrimaryKey(voteId);
+        PageHelper.startPage(pageNum, pageSize);
+        List<WhiteUser> addressList = whiteUserMapper.selectAllByWhiteId(vote.getWhiteId());
+        return Rx.success(new PageInfo<>(addressList));
+    }
+
+    @Override
+    public R delWhiteUser(Long id) {
+        if (whiteUserMapper.deleteByPrimaryKey(id) == 1) {
+            return Rx.success();
+        }
+        return Rx.fail();
+    }
+
+    @Override
+    public R delBlackUser(Long id) {
+        if (blackUserMapper.deleteByPrimaryKey(id) == 1) {
+            return Rx.success();
+        }
+        return Rx.fail();
+    }
+
+    private Map<String, Long> listToMap(List<? extends BlackUser> list) {
+        Map<String, Long> map = new HashMap<>();
+        for (BlackUser blackUser : list) {
+            map.put(blackUser.getAddress(), blackUser.getId());
+        }
+        return map;
+    }
+
+    private Map<String, Long> listToMap2(List<? extends WhiteUser> list) {
+        Map<String, Long> map = new HashMap<>();
+        for (WhiteUser WhiteUser : list) {
+            map.put(WhiteUser.getAddress(), WhiteUser.getId());
+        }
+        return map;
+    }
+
+    private List<String> dealTxtFile(MultipartFile file) throws IOException {
+        Set<String> addressList = new HashSet<>();
+        // 建立一个输入流对象reader
+        InputStreamReader reader = new InputStreamReader(file.getInputStream());
+        // 建立一个对象，它把文件内容转成计算机能读懂的语言
+        BufferedReader br = new BufferedReader(reader);
+        // 一次读入一行数据
+        String line = br.readLine();
+        while (line != null) {
+            if (line.startsWith("0x") && line.length() == "0x0000000000000000000000000000000000000064".length()) {
+                addressList.add(line);
+            }
+            log.info(line);
+            line = br.readLine();
+        }
+        return new ArrayList<>(addressList);
     }
 
     private SysUser initUser(String address) {

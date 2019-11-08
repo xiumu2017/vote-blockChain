@@ -6,12 +6,12 @@ import com.gaoshan.linkvote.sys.entity.SysFile;
 import com.gaoshan.linkvote.sys.service.SysFileService;
 import com.gaoshan.linkvote.vote.entity.VoteQuery;
 import com.gaoshan.linkvote.vote.service.VoteService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletResponse;
@@ -48,7 +48,7 @@ public class VoteController {
      */
     @ApiOperation("分页查询投票列表")
     @GetMapping("/queryVotePage")
-    public R queryVotePage(@ApiParam("分页查询实体") VoteQuery query, Principal principal) {
+    public R queryVotePage(@ApiParam("分页查询实体") VoteQuery query, @ApiIgnore Principal principal) {
         log.info(principal.getName());
         return Rx.success(voteService.queryByPage(query));
     }
@@ -73,14 +73,65 @@ public class VoteController {
      * @return 投票详情
      * 选项列表；当前用户选择结果；当前投票统计结果；
      */
-    @ApiIgnore
     @ApiOperation("查询投票详情")
     @GetMapping("/getVoteDetail")
-    public R getVoteDetail(Long voteId, Principal principal) {
+    public R getVoteDetail(Long voteId, @ApiIgnore Principal principal) {
         if (voteId == null) {
             return Rx.error("参数为空异常！");
         }
         return voteService.getVoteDetail(voteId, principal.getName());
+    }
+
+    @ApiOperation("增加黑/白名单数据")
+    @PostMapping("/addVoteBWList")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "type", value = "类型：black-黑名单；white-白名单", example = "black"),
+            @ApiImplicitParam(name = "voteId", value = "投票id", example = "30"),
+    })
+    public R addVoteBWList(MultipartFile file, Long voteId, @ApiIgnore Principal principal, String type) {
+        log.info(principal.getName());
+        if (voteId == null) {
+            return Rx.error("voteId 不能为空");
+        }
+        if (file == null) {
+            return Rx.error("文件为空");
+        }
+        if (StringUtils.isBlank(type)) {
+            return Rx.error("type 为空");
+        }
+        return voteService.addVoteBWList(file, voteId, type);
+    }
+
+    @ApiOperation("分页展示投票黑名单列表")
+    @GetMapping("/getBlackPage")
+    public R getBlackPage(Long voteId, Integer pageNum, Integer pageSize) {
+        if (voteId == null) {
+            return Rx.error("参数为空");
+        }
+        return voteService.getBlackPage(voteId, pageNum, pageSize);
+    }
+
+    @ApiOperation("分页展示投票黑白名单列表")
+    @GetMapping("/getWhitePage")
+    public R getWhitePage(Long voteId, Integer pageNum, Integer pageSize) {
+        if (voteId == null) {
+            return Rx.error("参数为空");
+        }
+        return voteService.getWhitePage(voteId, pageNum, pageSize);
+    }
+
+    @ApiOperation("删除黑名单地址")
+    @GetMapping("/delBlackUser")
+    public R delBlackUser(Long id) {
+        if (id == null) return Rx.error("参数为空");
+        return voteService.delBlackUser(id);
+    }
+
+    @ApiOperation("删除白名单地址")
+    @GetMapping("/delWhiteUser")
+    public R delWhiteUser(Long id) {
+        if (id == null) return Rx.error("参数为空");
+        return voteService.delWhiteUser(id);
     }
 
     /**

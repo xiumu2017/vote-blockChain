@@ -51,5 +51,5 @@ public interface BlackListMapper {
 
     List<BlackList> selectByAll(BlackList blackList);
 
-
+    List<BlackList> selectByAddress(String address);
 }

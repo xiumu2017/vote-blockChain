@@ -110,4 +110,10 @@
             and create_user = #{createUser}
         </if>
     </select>
+    <select id="selectByAddress" resultMap="BaseResultMap">
+        select l.id
+        from t_black_list l
+        left join t_black_user u on u.black_id = l.id
+        where u.address = #{address,jdbcType=VARCHAR}
+    </select>
 </mapper>

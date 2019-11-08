@@ -147,7 +147,7 @@ public class VoteAppController {
         if (StringUtils.isBlank(address)) {
             return Rx.error("地址信息为空");
         }
-        return Rx.success(voteService.appQueryVotePage(address, pageNum, pageSize));
+        return voteService.appQueryVotePage(address, pageNum, pageSize);
     }
 
     /**

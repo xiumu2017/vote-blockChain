@@ -61,7 +61,7 @@ public interface VoteMapper {
 
     List<Vote> selectByAll(VoteQuery vote);
 
-    List<Vote> selectByApp();
+    List<Vote> selectByApp(@Param("voteIdList") List<String> voteIdListBlack);
 
     Date selectNow();
 
@@ -72,4 +72,8 @@ public interface VoteMapper {
     int updateBlockSuccessToIng();
 
     int setEndedStatus();
+
+    List<String> selectByBlackAddress(@Param("address") String address);
+
+    List<String> selectByWhiteAddress(@Param("address") String address);
 }

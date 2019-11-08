@@ -21,4 +21,12 @@ public class WhiteUser extends BaseEntity {
 
     @ApiModelProperty(value = "用户地址")
     private String address;
+
+    public WhiteUser() {
+    }
+
+    public WhiteUser(Long whiteId, String address) {
+        this.whiteId = whiteId;
+        this.address = address;
+    }
 }

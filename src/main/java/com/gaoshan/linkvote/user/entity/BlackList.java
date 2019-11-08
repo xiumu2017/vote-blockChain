@@ -10,6 +10,14 @@ import lombok.EqualsAndHashCode;
 @ApiModel(value = "黑名单")
 @Data
 public class BlackList extends BaseEntity {
+    public BlackList(String name, String desc) {
+        this.name = name;
+        this.desc = desc;
+    }
+
+    public BlackList() {
+    }
+
     @ApiModelProperty(value = "主键", hidden = true, example = "1")
     private Long id;
 

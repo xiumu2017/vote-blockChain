@@ -10,6 +10,14 @@ import lombok.EqualsAndHashCode;
 @ApiModel(value = "黑名单用户")
 @Data
 public class BlackUser extends BaseEntity {
+    public BlackUser() {
+    }
+
+    public BlackUser(Long blackId, String address) {
+        this.blackId = blackId;
+        this.address = address;
+    }
+
     @ApiModelProperty(value = "主键")
     private Long id;
 

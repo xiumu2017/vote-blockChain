@@ -19,11 +19,13 @@
         <result column="update_user" jdbcType="BIGINT" property="updateUser"/>
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="black_id" jdbcType="BIGINT" property="blackId"/>
+        <result column="white_id" jdbcType="BIGINT" property="whiteId"/>
     </resultMap>
     <sql id="Base_Column_List">
         <!--@mbg.generated-->
         id, topic, `desc`, file_id, picUrl, `type`, `status`, is_del, limit_num, start_time, end_time, create_user,
-        update_user, create_time, update_time, hash
+        update_user, create_time, update_time, hash,black_id,white_id
     </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
         <!--@mbg.generated-->
@@ -172,6 +174,12 @@
             <if test="hash != null and hash != ''">
                 hash = #{hash,jdbcType=VARCHAR},
             </if>
+            <if test="blackId != null">
+                black_id = #{blackId,jdbcType=BIGINT},
+            </if>
+            <if test="whiteId != null">
+                white_id = #{whiteId,jdbcType=BIGINT},
+            </if>
             update_time = now(),
         </set>
         where id = #{id,jdbcType=BIGINT}
@@ -228,6 +236,10 @@
         where 1=1
         and is_del= 0
         and status <![CDATA[ >= ]]> 3
+        and id not in
+        <foreach collection="voteIdList" open="(" close=")" item="item" separator=",">
+            #{item}
+        </foreach>
     </select>
     <select id="selectUnConfirmedHash" resultMap="BaseResultMap">
         select
@@ -256,4 +268,22 @@
           and is_del = '0'
           and now() <![CDATA[ >= ]]> end_time
     </update>
+    <select id="selectByBlackAddress" resultType="java.lang.String">
+        SELECT v.id
+        FROM t_vote v
+        LEFT JOIN t_black_user u ON v.black_id = u.black_id
+        WHERE u.address = #{address,jdbcType=VARCHAR}
+        GROUP BY v.id
+    </select>
+    <select id="selectByWhiteAddress" resultType="java.lang.String">
+        SELECT id
+        FROM t_vote
+        WHERE white_id IS NOT NULL
+        AND id NOT IN (
+        SELECT v.id
+        FROM t_vote v
+        LEFT JOIN t_white_user w ON v.white_id = w.white_id
+        WHERE w.address = #{address,jdbcType=VARCHAR}
+        GROUP BY v.id)
+    </select>
 </mapper>

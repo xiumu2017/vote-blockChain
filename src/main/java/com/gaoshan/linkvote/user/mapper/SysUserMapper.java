@@ -1,7 +1,7 @@
 package com.gaoshan.linkvote.user.mapper;
-import java.util.Date;
 
 import com.gaoshan.linkvote.user.bean.SysUser;
+import com.gaoshan.linkvote.user.bean.UserHash;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -70,6 +70,8 @@ public interface SysUserMapper {
      * @return 用户列表信息
      */
     List<SysUser> selectUsersByVoteId(@Param("voteId") Long voteId);
+
+    List<UserHash> selectVoteUserHashByVoteId(@Param("voteId") Long voteId);
 
     List<SysUser> selectByAll(SysUser sysUser);
 

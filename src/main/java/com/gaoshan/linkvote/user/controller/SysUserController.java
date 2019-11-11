@@ -72,7 +72,7 @@ public class SysUserController {
     @ApiOperation(value = "管理员修改密码")
     @RequestMapping(value = "/changePassword", method = RequestMethod.POST)
     @ResponseBody
-    public R changePassword(@RequestBody String password, @ApiIgnore Principal principal) {
+    public R changePassword(String password, @ApiIgnore Principal principal) {
         if (StringUtils.isBlank(password)) {
             return Rx.error("密码不能为空");
         }
@@ -160,7 +160,7 @@ public class SysUserController {
 
         SysUser sysUser = adminService.selectByName(principal.getName());
         user.setUpdateUser(sysUser.getId());
-        adminService.updateByPrimaryKeySelective(sysUser);
+        adminService.updateByPrimaryKeySelective(user);
         return Rx.success();
     }
 

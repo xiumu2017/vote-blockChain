@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.gaoshan.linkvote.base.R;
 import com.gaoshan.linkvote.base.Rx;
 import com.gaoshan.linkvote.user.bean.SysUser;
+import com.gaoshan.linkvote.user.bean.UserHash;
 import com.gaoshan.linkvote.user.entity.BlackList;
 import com.gaoshan.linkvote.user.entity.BlackUser;
 import com.gaoshan.linkvote.user.entity.WhiteList;
@@ -123,6 +124,8 @@ public class VoteServiceImpl implements VoteService {
         // 查询 已投的用户信息
         List<SysUser> userList = userMapper.selectUsersByVoteId(voteId);
         resultMap.put("userList", userList);
+        List<UserHash> userHashList = userMapper.selectVoteUserHashByVoteId(voteId);
+        resultMap.put("userHashList", userHashList);
         return Rx.success(resultMap);
     }
 
@@ -142,6 +145,7 @@ public class VoteServiceImpl implements VoteService {
                 map.put("voteTime", voteUser.getVoteTime());
                 map.put("userName", sysUser.getUsername());
                 map.put("pic", sysUser.getPicUrl());
+                map.put("hash", voteUser.getHash());
                 resultList.add(map);
             }
         }
@@ -160,6 +164,8 @@ public class VoteServiceImpl implements VoteService {
             return Rx.error("地址信息未入库");
         }
         vote.setUpdateUser(sysUser.getId());
+        vote.setStatus(Vote_Status.WAIT_CONFIRM.getCode());
+        // 更新投票的hash和投票状态
         if (voteMapper.updateByPrimaryKeySelective(vote) == 1) {
             return Rx.success();
         }
@@ -223,15 +229,16 @@ public class VoteServiceImpl implements VoteService {
 
     @Override
     public R appQueryVotePage(String address, Integer pageNum, Integer pageSize) {
+        SysUser sysUser = userMapper.selectByAddress(address);
         // 黑白名单处理
         // 根据用户address 查询 黑名单 list，关联投票id； 排除这些投票 not in
         List<String> voteIdListBlack = voteMapper.selectByBlackAddress(address);
         // 查询全部 白名单投票 list ; 判断当前地址是否包含在内，不包含则 排除
         List<String> voteIdListWhite = voteMapper.selectByWhiteAddress(address);
         voteIdListBlack.addAll(voteIdListWhite);
+        Long userId = sysUser == null ? null : sysUser.getId();
         PageHelper.startPage(pageNum, pageSize);
-        List<Vote> list = voteMapper.selectByApp(voteIdListBlack);
-        SysUser sysUser = userMapper.selectByAddress(address);
+        List<Vote> list = voteMapper.selectByApp(voteIdListBlack, userId);
         if (!list.isEmpty()) {
             for (Vote vote : list) {
                 List<VoteOption> optionList = optionMapper.selectByVoteId(vote.getId());
@@ -273,6 +280,8 @@ public class VoteServiceImpl implements VoteService {
         // 查询 已投的用户信息
         List<SysUser> userList = userMapper.selectUsersByVoteId(voteId);
         resultMap.put("userList", userList);
+        List<UserHash> userHashList = userMapper.selectVoteUserHashByVoteId(voteId);
+        resultMap.put("userHashList", userHashList);
         return Rx.success(resultMap);
     }
 

@@ -3,6 +3,7 @@ package com.gaoshan.linkvote.vote.job;
 import com.gaoshan.linkvote.vote.entity.Vote;
 import com.gaoshan.linkvote.vote.entity.VoteUser;
 import com.gaoshan.linkvote.vote.entity.Vote_Status;
+import com.gaoshan.linkvote.vote.entity.Vote_User_Status;
 import com.gaoshan.linkvote.vote.mapper.VoteMapper;
 import com.gaoshan.linkvote.vote.mapper.VoteUserMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,7 @@ public class HashQueryScheduleJob {
     /**
      * 定时任务 上链成功的投票设置为进行中
      */
-    @Scheduled(cron = "0 0/2 * * * ? ")
+    @Scheduled(cron = "0 0/1 * * * ? ")
     public void updateVoteStatus() {
         int y = voteMapper.updateBlockSuccessToIng();
         log.info("--->>> 定时任务 上链成功的投票设置为进行中：" + y);
@@ -51,7 +52,7 @@ public class HashQueryScheduleJob {
      * 定时任务，多线程扫描未确认的Hash
      * 判断扫描时长或次数，超时判定失败
      */
-    @Scheduled(cron = "0 0/2 * * * ? ")
+    @Scheduled(cron = "0 0/1 * * * ? ")
     public void hashQuery() {
         log.info("定时任务，多线程扫描未确认的Hash >>> ");
         List<Vote> voteList = voteMapper.selectUnConfirmedHash();
@@ -86,10 +87,10 @@ public class HashQueryScheduleJob {
     private void blockChainQuery(VoteUser voteUser) {
         if (chain3jHashQuery(voteUser.getHash())) {
             // 更新投票选择状态
-            voteUserMapper.updateStatus(voteUser.getVoteId(), voteUser.getUserId(), "1");
+            voteUserMapper.updateStatus(voteUser.getVoteId(), voteUser.getUserId(), Vote_User_Status.TX_SUCCESS.getCode());
         } else if (checkExpired(voteUser.getVoteTime(), expireMinute)) {
             // 判断创建时间，是否超时
-            voteUserMapper.updateStatus(voteUser.getVoteId(), voteUser.getUserId(), "2");
+            voteUserMapper.updateStatus(voteUser.getVoteId(), voteUser.getUserId(), Vote_User_Status.TX_FAIL.getCode());
         }
     }
 
@@ -102,9 +103,9 @@ public class HashQueryScheduleJob {
         if (chain3jHashQuery(vote.getHash())) {
             // 更新投票状态
             log.info("// 更新投票状态");
-            voteMapper.updateStatus(vote.getId(), Vote_Status.BLOCK_SUCCESS.getCode());
+            voteMapper.updateStatus(vote.getId(), Vote_Status.TX_SUCCESS.getCode());
         } else if (checkExpired(vote.getCreateTime(), expireMinute)) {
-            voteMapper.updateStatus(vote.getId(), Vote_Status.BLOCK_FAIL.getCode());
+            voteMapper.updateStatus(vote.getId(), Vote_Status.TX_FAIL.getCode());
         }
     }
 

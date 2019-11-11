@@ -61,7 +61,8 @@ public interface VoteMapper {
 
     List<Vote> selectByAll(VoteQuery vote);
 
-    List<Vote> selectByApp(@Param("voteIdList") List<String> voteIdListBlack);
+    List<Vote> selectByApp(@Param("voteIdList") List<String> voteIdListBlack,
+                           @Param("userId") Long userId);
 
     Date selectNow();
 

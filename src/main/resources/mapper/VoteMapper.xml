@@ -235,20 +235,26 @@
         from t_vote
         where 1=1
         and is_del= 0
-        and status <![CDATA[ >= ]]> 3
+        <if test="userId != null">
+            and (create_user = #{userId,jdbcType=BIGINT} or status in ('3','4'))
+        </if>
+        <if test="userId == null">
+            and status in ('3','4')
+        </if>
         <if test="voteIdList != null and voteIdList.size() != 0">
             and id not in
             <foreach open="(" close=")" collection="voteIdList" item="item" separator=",">
                 #{item}
             </foreach>
         </if>
+        order by create_time desc
     </select>
     <select id="selectUnConfirmedHash" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
         from t_vote
         where is_del = 0
-        and status = 0
+        and status = 9
         and hash is not null
     </select>
 

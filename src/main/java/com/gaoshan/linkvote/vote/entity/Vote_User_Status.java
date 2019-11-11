@@ -1,6 +1,6 @@
 package com.gaoshan.linkvote.vote.entity;
 
-public enum Vote_Status {
+public enum Vote_User_Status {
     /**
      * 初始化创建 - 未上链
      */
@@ -8,27 +8,19 @@ public enum Vote_Status {
     /**
      * 等待交易确认
      */
-    WAIT_CONFIRM("9"),
+    WAIT_CONFIRM("1"),
     /**
      * 交易成功
      */
-    TX_SUCCESS("1"),
+    TX_SUCCESS("2"),
     /**
      * 交易失败
      */
-    TX_FAIL("2"),
-    /**
-     * 进行中
-     */
-    ING("3"),
-    /**
-     * 已结束
-     */
-    ENDED("4");
+    TX_FAIL("3");
 
     private String code;
 
-    Vote_Status(String code) {
+    Vote_User_Status(String code) {
         this.code = code;
     }
 

@@ -123,9 +123,9 @@ public class SysUserController {
         }
         //校验地址重复 用户名重复
         if (adminService.selectByName(user.getUsername()) != null) {
-            return Rx.error("username 已存在");
+            return Rx.error("用户名已存在");
         }
-        if (adminService.selectByName(user.getUsername()) != null) {
+        if (adminService.selectByAddress(user.getAddress()) != null) {
             return Rx.error("address 已存在");
         }
         SysUser sysUser = adminService.selectByName(principal.getName());
@@ -155,7 +155,7 @@ public class SysUserController {
         }
         if (!priUser.getUsername().equals(user.getUsername()) &&
                 adminService.selectByName(user.getUsername()) != null) {
-            return Rx.error("username 已存在");
+            return Rx.error("用户名已存在");
         }
 
         SysUser sysUser = adminService.selectByName(principal.getName());

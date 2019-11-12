@@ -54,8 +54,11 @@ public class BlackWhiteUserServiceImpl implements BlackWhiteUserService {
         if (blackListMapper.deleteByPrimaryKey(id) == 1) {
             return Rx.success();
         } else {
-            return Rx.fail();
+            if (blackListMapper.selectByPrimaryKey(id) != null) {
+                return Rx.fail();
+            }
         }
+        return Rx.success();
     }
 
     @Override
@@ -115,8 +118,11 @@ public class BlackWhiteUserServiceImpl implements BlackWhiteUserService {
         if (whiteListMapper.deleteByPrimaryKey(id) == 1) {
             return Rx.success();
         } else {
-            return Rx.fail();
+            if (whiteListMapper.selectByPrimaryKey(id) != null) {
+                return Rx.fail();
+            }
         }
+        return Rx.success();
     }
 
     @Override

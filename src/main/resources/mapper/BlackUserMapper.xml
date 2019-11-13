@@ -91,6 +91,7 @@
         <include refid="Base_Column_List"/>
         from t_black_user
         where black_id=#{blackId,jdbcType=BIGINT}
+        order by address
     </select>
     <insert id="batchInsert">
         insert into t_black_user (black_id, address) VALUE

@@ -72,9 +72,6 @@
                 pic_url = #{picUrl,jdbcType=VARCHAR},
             </if>
             update_time = now(),
-            <if test="createUser != null">
-                create_user = #{createUser,jdbcType=BIGINT},
-            </if>
             <if test="updateUser != null">
                 update_user = #{updateUser,jdbcType=BIGINT},
             </if>
@@ -91,6 +88,7 @@
         <include refid="Base_Column_List"/>
         from sys_user
         where username=#{name,jdbcType=VARCHAR}
+        and status <![CDATA[<>]]> 0
         limit 1
     </select>
 
@@ -100,6 +98,7 @@
         <include refid="Base_Column_List"/>
         from sys_user
         where address=#{address,jdbcType=VARCHAR}
+        and status <![CDATA[<>]]> 0
         limit 1
     </select>
     <update id="changePassword">
@@ -157,6 +156,7 @@
         <if test="isAdmin != null">
             and is_admin=#{isAdmin,jdbcType=INTEGER}
         </if>
+        order by create_time desc
     </select>
     <update id="delAdminUser">
         update sys_user

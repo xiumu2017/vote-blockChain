@@ -7,6 +7,7 @@ import com.gaoshan.linkvote.user.bean.RegisterBean;
 import com.gaoshan.linkvote.user.bean.SysUser;
 import com.gaoshan.linkvote.user.bean.UserQuery;
 import com.gaoshan.linkvote.user.service.SysUserService;
+import com.gaoshan.linkvote.user.utils.UserUtils;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -122,15 +123,29 @@ public class SysUserController {
             return Rx.error("address 参数格式错误");
         }
         //校验地址重复 用户名重复
-        if (adminService.selectByName(user.getUsername()) != null) {
-            return Rx.error("用户名已存在");
+        SysUser sysUser = adminService.selectByName(user.getUsername());
+        if (sysUser != null) {
+            if (sysUser.getIsAdmin() == 1) {
+                return Rx.error("用户名已存在");
+            }
         }
-        if (adminService.selectByAddress(user.getAddress()) != null) {
-            return Rx.error("address 已存在");
+        SysUser createUser = adminService.selectByName(principal.getName());
+        sysUser = adminService.selectByAddress(user.getAddress());
+        if (sysUser != null) {
+            if (UserUtils.isAdmin(sysUser)) {
+                return Rx.error("address 已存在");
+            } else {
+                // 更新用户为管理员
+                user.setUpdateUser(createUser.getId());
+                user.setStatus("1");
+                user.setIsAdmin(1);
+                user.setId(sysUser.getId());
+                adminService.updateByPrimaryKeySelective(user);
+                return Rx.success();
+            }
         }
-        SysUser sysUser = adminService.selectByName(principal.getName());
-        user.setCreateUser(sysUser.getId());
-        user.setUpdateUser(sysUser.getId());
+        user.setCreateUser(createUser.getId());
+        user.setUpdateUser(createUser.getId());
         user.setStatus("1");
         user.setIsAdmin(1);
         adminService.insert(user);

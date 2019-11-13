@@ -10,6 +10,7 @@ import com.gaoshan.linkvote.user.entity.BlackUser;
 import com.gaoshan.linkvote.user.entity.WhiteList;
 import com.gaoshan.linkvote.user.entity.WhiteUser;
 import com.gaoshan.linkvote.user.mapper.*;
+import com.gaoshan.linkvote.user.utils.UserUtils;
 import com.gaoshan.linkvote.vote.entity.*;
 import com.gaoshan.linkvote.vote.mapper.VoteMapper;
 import com.gaoshan.linkvote.vote.mapper.VoteOptionMapper;
@@ -23,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
@@ -58,8 +58,7 @@ public class VoteServiceImpl implements VoteService {
     @Override
     public R insert(Vote record, String optionJson, String address) {
         SysUser user = userMapper.selectByAddress(address);
-        if (user == null || user.getIsAdmin() != 1) {
-//            user = initUser(address);
+        if (!UserUtils.isAdmin(user)) {
             return Rx.error("没有操作权限");
         }
         List<VoteOption> optionList = JSONArray.parseArray(optionJson, VoteOption.class);
@@ -262,6 +261,9 @@ public class VoteServiceImpl implements VoteService {
         if (vote == null) {
             return Rx.error("投票不存在或已删除");
         }
+        SysUser createUser = userMapper.selectByPrimaryKey(vote.getCreateUser());
+        vote.setCreateUserName(createUser.getUsername());
+        vote.setCreateUserPic(createUser.getPicUrl());
         // 查询选项信息和统计数量
         List<VoteOption> optionList = optionMapper.selectByVoteId(voteId);
         for (VoteOption option : optionList) {
@@ -346,7 +348,7 @@ public class VoteServiceImpl implements VoteService {
                 for (String address : addressList) {
                     if (map.get(address) == null) {
                         map.put(address, 0L);
-                        whiteUserMapper.insert(new WhiteUser(vote.getBlackId(), address));
+                        whiteUserMapper.insert(new WhiteUser(vote.getWhiteId(), address));
                     }
                 }
             } else {
@@ -385,18 +387,24 @@ public class VoteServiceImpl implements VoteService {
 
     @Override
     public R delWhiteUser(Long id) {
+        if (whiteUserMapper.selectByPrimaryKey(id) == null) {
+            return Rx.fail("数据已删除");
+        }
         if (whiteUserMapper.deleteByPrimaryKey(id) == 1) {
             return Rx.success();
         }
-        return Rx.fail();
+        return Rx.success();
     }
 
     @Override
     public R delBlackUser(Long id) {
+        if (blackUserMapper.selectByPrimaryKey(id) == null) {
+            return Rx.fail("数据已删除");
+        }
         if (blackUserMapper.deleteByPrimaryKey(id) == 1) {
             return Rx.success();
         }
-        return Rx.fail();
+        return Rx.success();
     }
 
     private Map<String, Long> listToMap(List<? extends BlackUser> list) {

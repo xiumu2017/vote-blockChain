@@ -55,4 +55,8 @@ public interface VoteUserMapper {
                      @Param("status") String status);
 
     List<VoteUser> selectUnConfirmedHash();
+
+    int deleteByVoteIdAndUserId(@Param("voteId") Long voteId,
+                                @Param("userId") Long userId);
+
 }

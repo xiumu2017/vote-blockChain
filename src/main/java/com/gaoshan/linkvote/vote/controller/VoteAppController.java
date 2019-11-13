@@ -9,6 +9,7 @@ import com.gaoshan.linkvote.vote.entity.VoteModel;
 import com.gaoshan.linkvote.vote.service.VoteService;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
+import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,12 +58,20 @@ public class VoteAppController {
                 return Rx.error("服务器图片路径异常");
             }
             try {
-                File file = new File(dir.getAbsolutePath() + File.separator + img.getOriginalFilename());
+                String fileName = dir.getAbsolutePath() + File.separator + img.getOriginalFilename();
+                File file = new File(fileName);
                 img.transferTo(file);
                 sysFile.setFileName(img.getOriginalFilename());
                 sysFile.setFilePath(file.getAbsolutePath());
                 sysFile.setFileSize(Math.toIntExact(img.getSize()));
                 sysFileService.insert(sysFile);
+                // 压缩图片
+                String preFix = fileName.substring(0, fileName.lastIndexOf("."));
+                String subFix = fileName.substring(fileName.lastIndexOf("."));
+                Thumbnails.of(file)
+                        .outputQuality(0.5f)
+                        .scale(1d)
+                        .toFile(new File(preFix + "_thumb" + subFix));
                 return Rx.success(url + sysFile.getId());
             } catch (IOException e) {
                 log.error(e.getLocalizedMessage());

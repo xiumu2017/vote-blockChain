@@ -205,6 +205,9 @@ public class VoteServiceImpl implements VoteService {
                 optionIdList.add(Long.valueOf(optionId));
             }
         }
+        // 删除原有记录
+        int r = voteUserMapper.deleteByVoteIdAndUserId(voteId, user.getId());
+        log.info("删除原有投票记录: " + r);
         voteUserMapper.insertBatch(user.getId(), address, voteId, optionIdList);
         // 处理返回的json
         Map<String, Object> resMap = new HashMap<>();
@@ -236,6 +239,7 @@ public class VoteServiceImpl implements VoteService {
         List<String> voteIdListWhite = voteMapper.selectByWhiteAddress(address);
         voteIdListBlack.addAll(voteIdListWhite);
         Long userId = sysUser == null ? null : sysUser.getId();
+
         PageHelper.startPage(pageNum, pageSize);
         List<Vote> list = voteMapper.selectByApp(voteIdListBlack, userId);
         if (!list.isEmpty()) {

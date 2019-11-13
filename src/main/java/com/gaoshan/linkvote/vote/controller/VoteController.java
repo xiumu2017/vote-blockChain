@@ -155,9 +155,21 @@ public class VoteController {
      */
     @ApiOperation("显示图片")
     @RequestMapping(value = "/showPic", method = RequestMethod.GET)
-    public void showPic(HttpServletResponse response, Long fileId) {
+    public void showPic(HttpServletResponse response, Long fileId, String origin) {
         SysFile sysFile = fileService.selectByPrimaryKey(fileId);
-        File file = new File(sysFile.getFilePath());
+        File file;
+        // 默认缩略图
+        if (StringUtils.isNotBlank(origin)) {
+            file = new File(sysFile.getFilePath());
+        } else {
+            String fileName = sysFile.getFilePath();
+            String preFix = fileName.substring(0, fileName.lastIndexOf("."));
+            String subFix = fileName.substring(fileName.lastIndexOf("."));
+            file = new File(preFix + "_thumb" + subFix);
+            if (!file.exists()) {
+                file = new File(sysFile.getFilePath());
+            }
+        }
         if (!file.exists()) {
             log.error("文件信息不存在！");
             return;

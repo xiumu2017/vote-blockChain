@@ -92,7 +92,7 @@ public class SysUserController {
     @ApiOperation("拉取用户信息")
     @GetMapping(value = "/info")
     @ResponseBody
-    public R getUserInfo(Principal principal) {
+    public R getUserInfo(@ApiIgnore Principal principal) {
         log.info(principal.getName());
         return Rx.success(adminService.selectByName(principal.getName()));
     }

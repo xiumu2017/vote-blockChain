@@ -62,4 +62,8 @@ public interface WhiteUserMapper {
     List<String> selectAddressByWhiteId(@Param("whiteId") Long whiteId);
 
     int batchInsert(@Param("id") Long id, @Param("addressList") List<String> addressList);
+
+    Long countByWhiteIdAndAddress(@Param("whiteId") Long whiteId,
+                                  @Param("address") String address);
+
 }

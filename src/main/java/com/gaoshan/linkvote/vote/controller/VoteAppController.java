@@ -115,13 +115,17 @@ public class VoteAppController {
     @ApiOperation("更新投票的上链Hash")
     @PostMapping("/updateVoteHash")
     public R updateVoteHash(String address, Long voteId, String hash) {
+        log.info("更新投票的上链Hash");
+        log.info("address: " + address);
+        log.info("voteId: " + voteId);
+        log.info("hash: " + hash);
         if (StringUtils.isBlank(address)) {
             return Rx.error("地址信息为空");
         }
         if (StringUtils.isBlank(hash)) {
             return Rx.error("Hash不能为空");
         } else if (!hash.startsWith("0x")) {
-            return Rx.error("Hash 格式不正确");
+            return Rx.error("Hash: " + hash + " 格式不正确 ");
         }
         if (voteId == null) {
             return Rx.error("投票ID为空");
@@ -207,6 +211,10 @@ public class VoteAppController {
             @ApiImplicitParam(name = "hash", value = "交易Hash")})
     @PostMapping("/updateAppVoteHash")
     public R updateAppVoteHash(String address, Long voteId, String hash) {
+        log.info("更新用户投票上链的Hash");
+        log.info("address: " + address);
+        log.info("voteId: " + voteId);
+        log.info("hash: " + hash);
         if (StringUtils.isBlank(address)) {
             return Rx.error("address不能为空");
         }
@@ -217,7 +225,7 @@ public class VoteAppController {
             return Rx.error("Hash 不能为空");
         }
         if (!hash.startsWith("0x")) {
-            return Rx.error("Hash 格式不正确");
+            return Rx.error("Hash:" + hash + " 格式不正确");
         }
         return voteService.updateAppVoteHash(address, voteId, hash);
     }

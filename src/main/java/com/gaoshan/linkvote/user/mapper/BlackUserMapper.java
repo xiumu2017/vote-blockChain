@@ -68,6 +68,9 @@ public interface BlackUserMapper {
      */
     int batchInsert(@Param("id") Long id, @Param("addressList") List<String> addressList);
 
-    List<String> selectAddressByBlackId(@Param("blackId")Long blackId);
+    List<String> selectAddressByBlackId(@Param("blackId") Long blackId);
+
+    int selectCountByBlackIdAndAddress(@Param("blackId") Long blackId,
+                                              @Param("address") String address);
 
 }

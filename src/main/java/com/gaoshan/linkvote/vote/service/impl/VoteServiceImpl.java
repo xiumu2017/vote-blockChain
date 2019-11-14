@@ -265,6 +265,19 @@ public class VoteServiceImpl implements VoteService {
         if (vote == null) {
             return Rx.error("投票不存在或已删除");
         }
+
+        // 权限判断 在黑名单 or 不在白名单，么得权限
+        if (vote.getBlackId() != null) {
+            if (blackUserMapper.selectCountByBlackIdAndAddress(vote.getBlackId(), address) > 0) {
+                return Rx.error("没有权限");
+            }
+        }
+        if (vote.getWhiteId() != null) {
+            if (whiteUserMapper.countByWhiteIdAndAddress(vote.getWhiteId(), address) < 1) {
+                return Rx.error("没有权限");
+            }
+        }
+
         SysUser createUser = userMapper.selectByPrimaryKey(vote.getCreateUser());
         vote.setCreateUserName(createUser.getUsername());
         vote.setCreateUserPic(createUser.getPicUrl());

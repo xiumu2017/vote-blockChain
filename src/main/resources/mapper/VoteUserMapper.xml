@@ -92,9 +92,10 @@
         and vote_id = #{voteId}
     </update>
     <select id="selectUnConfirmedHash" resultMap="BaseResultMap">
-        select MAX(id)      id,
-               MAX(user_id) user_id,
-               MAX(vote_id) vote_id,
+        select MAX(id)        id,
+               MAX(user_id)   user_id,
+               MAX(vote_id)   vote_id,
+               MAX(vote_time) vote_time,
                `hash`
         from t_vote_user
         where hash is not null

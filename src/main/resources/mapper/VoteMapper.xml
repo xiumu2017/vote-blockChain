@@ -284,14 +284,26 @@
         GROUP BY v.id
     </select>
     <select id="selectByWhiteAddress" resultType="java.lang.String">
-        SELECT id
-        FROM t_vote
-        WHERE white_id IS NOT NULL
-        AND id NOT IN (
-        SELECT v.id
-        FROM t_vote v
-        LEFT JOIN t_white_user w ON v.white_id = w.white_id
-        WHERE w.address = #{address,jdbcType=VARCHAR}
-        GROUP BY v.id)
+        SELECT
+            tv.id
+        FROM
+            t_vote tv
+                LEFT JOIN t_white_user tw ON tv.white_id = tw.white_id
+        WHERE
+            tv.white_id IS NOT NULL
+          AND tv.id NOT IN (
+            SELECT
+                v.id
+            FROM
+                t_vote v
+                    LEFT JOIN t_white_user w ON v.white_id = w.white_id
+            WHERE
+                w.address = #{address,jdbcType=VARCHAR}
+            GROUP BY
+                v.id
+        )
+          AND tw.address IS NOT NULL
+        GROUP BY
+            tv.id
     </select>
 </mapper>

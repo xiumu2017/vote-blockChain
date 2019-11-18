@@ -272,7 +272,8 @@ public class VoteServiceImpl implements VoteService {
                 return Rx.error("没有权限");
             }
         }
-        if (vote.getWhiteId() != null) {
+        if (vote.getWhiteId() != null
+                && whiteUserMapper.selectAddressByWhiteId(vote.getWhiteId()).size() > 0) {
             if (whiteUserMapper.countByWhiteIdAndAddress(vote.getWhiteId(), address) < 1) {
                 return Rx.error("没有权限");
             }

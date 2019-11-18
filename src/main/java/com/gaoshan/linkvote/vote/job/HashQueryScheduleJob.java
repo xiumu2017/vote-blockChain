@@ -85,12 +85,13 @@ public class HashQueryScheduleJob {
      * @param voteUser 用户投票信息
      */
     private void blockChainQuery(VoteUser voteUser) {
+        // 判断创建时间，是否超时
+        if (checkExpired(voteUser.getVoteTime(), expireMinute)) {
+            voteUserMapper.updateStatus(voteUser.getVoteId(), voteUser.getUserId(), Vote_User_Status.TX_FAIL.getCode());
+        }
         if (chain3jHashQuery(voteUser.getHash())) {
             // 更新投票选择状态
             voteUserMapper.updateStatus(voteUser.getVoteId(), voteUser.getUserId(), Vote_User_Status.TX_SUCCESS.getCode());
-        } else if (checkExpired(voteUser.getVoteTime(), expireMinute)) {
-            // 判断创建时间，是否超时
-            voteUserMapper.updateStatus(voteUser.getVoteId(), voteUser.getUserId(), Vote_User_Status.TX_FAIL.getCode());
         }
     }
 
@@ -100,12 +101,13 @@ public class HashQueryScheduleJob {
      * @param vote 投票信息
      */
     private void blockChainQueryVote(Vote vote) {
+        if (checkExpired(vote.getCreateTime(), expireMinute)) {
+            voteMapper.updateStatus(vote.getId(), Vote_Status.TX_FAIL.getCode());
+        }
         if (chain3jHashQuery(vote.getHash())) {
             // 更新投票状态
             log.info("// 更新投票状态");
             voteMapper.updateStatus(vote.getId(), Vote_Status.TX_SUCCESS.getCode());
-        } else if (checkExpired(vote.getCreateTime(), expireMinute)) {
-            voteMapper.updateStatus(vote.getId(), Vote_Status.TX_FAIL.getCode());
         }
     }
 
@@ -150,7 +152,7 @@ public class HashQueryScheduleJob {
         Calendar now = Calendar.getInstance();
         Calendar createCalendar = Calendar.getInstance();
         createCalendar.setTime(createTime);
-        long min = (now.getTimeInMillis() - createCalendar.getTimeInMillis()) / 1000 * 60;
+        long min = (now.getTimeInMillis() - createCalendar.getTimeInMillis()) / (1000 * 60);
         return min > expireMinutes;
     }
 

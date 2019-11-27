@@ -21,4 +21,6 @@ public class VoteUser {
     private String hash;
 
     private Date voteTime;
+
+    private String indexes;
 }

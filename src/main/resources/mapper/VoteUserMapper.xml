@@ -12,6 +12,7 @@
         <result column="hash" jdbcType="VARCHAR" property="hash"/>
         <result column="status" jdbcType="VARCHAR" property="status"/>
         <result column="address" jdbcType="VARCHAR" property="address"/>
+        <result column="indexes" jdbcType="VARCHAR" property="indexes"/>
     </resultMap>
     <sql id="Base_Column_List">
         <!--@mbg.generated-->
@@ -109,4 +110,21 @@
         where vote_id=#{voteId,jdbcType=BIGINT}
         and user_id=#{userId,jdbcType=BIGINT}
     </delete>
+    <select id="selectForExcel" resultMap="BaseResultMap">
+        SELECT
+            u.id,
+            u.address,
+            u.`hash`,
+            u.`status`,
+            u.vote_time,
+            GROUP_CONCAT(o.`index` SEPARATOR ';') indexes
+        FROM
+            t_vote_user u
+                LEFT JOIN t_vote_option o ON u.opt_id = o.id
+        WHERE
+            u.vote_id = #{voteId}
+        GROUP BY
+            u.address
+        ORDER BY u.vote_time DESC
+    </select>
 </mapper>

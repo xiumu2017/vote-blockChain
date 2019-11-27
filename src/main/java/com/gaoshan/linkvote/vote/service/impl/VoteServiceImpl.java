@@ -425,6 +425,11 @@ public class VoteServiceImpl implements VoteService {
         return Rx.success();
     }
 
+    @Override
+    public List<VoteUser> selectExcel(Long voteId) {
+        return voteUserMapper.selectForExcel(voteId);
+    }
+
     private Map<String, Long> listToMap(List<? extends BlackUser> list) {
         Map<String, Long> map = new HashMap<>();
         for (BlackUser blackUser : list) {

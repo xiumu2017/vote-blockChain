@@ -3,8 +3,11 @@ package com.gaoshan.linkvote.vote.service;
 import com.gaoshan.linkvote.base.R;
 import com.gaoshan.linkvote.vote.entity.Vote;
 import com.gaoshan.linkvote.vote.entity.VoteQuery;
+import com.gaoshan.linkvote.vote.entity.VoteUser;
 import com.github.pagehelper.PageInfo;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 public interface VoteService {
 
@@ -47,4 +50,6 @@ public interface VoteService {
     R delWhiteUser(Long id);
 
     R delBlackUser(Long id);
+
+    List<VoteUser> selectExcel(Long voteId);
 }

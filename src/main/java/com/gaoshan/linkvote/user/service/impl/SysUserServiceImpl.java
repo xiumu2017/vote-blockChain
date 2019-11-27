@@ -142,4 +142,14 @@ public class SysUserServiceImpl implements SysUserService {
         List<SysUser> list = sysUserMapper.selectByAll(user);
         return Rx.success(new PageInfo<>(list));
     }
+
+    @Override
+    public R resetPassword(String password, Long id) {
+        SysUser user = sysUserMapper.selectByPrimaryKey(id);
+        String encodePassword = passwordEncoder.encode(password);
+        if (sysUserMapper.changePassword(user.getId(), encodePassword) == 1) {
+            return Rx.success();
+        }
+        return Rx.fail();
+    }
 }

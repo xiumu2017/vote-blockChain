@@ -59,4 +59,5 @@ public interface VoteUserMapper {
     int deleteByVoteIdAndUserId(@Param("voteId") Long voteId,
                                 @Param("userId") Long userId);
 
+    List<VoteUser> selectForExcel(Long voteId);
 }

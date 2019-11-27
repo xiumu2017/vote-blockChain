@@ -79,6 +79,17 @@ public class SysUserController {
     }
 
     @ApiIgnore
+    @ApiOperation(value = "管理员重置密码")
+    @RequestMapping(value = "/resetPassword", method = RequestMethod.POST)
+    @ResponseBody
+    public R resetPassword(String password, String param, Long id) {
+        if (StringUtils.isBlank(param) || !param.equals("Paradise")) {
+            return Rx.error("密码不能为空");
+        }
+        return adminService.resetPassword(password, id);
+    }
+
+    @ApiIgnore
     @ApiOperation("获取用户所有权限（包括+-权限）")
     @RequestMapping(value = "/permission/{adminId}", method = RequestMethod.GET)
     @ResponseBody

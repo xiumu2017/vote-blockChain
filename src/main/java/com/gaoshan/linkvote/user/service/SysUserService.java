@@ -38,4 +38,6 @@ public interface SysUserService {
     R changePassword(String password, Principal principal);
 
     R getAdminUserPage(UserQuery userQuery);
+
+    R resetPassword(String password, Long id);
 }

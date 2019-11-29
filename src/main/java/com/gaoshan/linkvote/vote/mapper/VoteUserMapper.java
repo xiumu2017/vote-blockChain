@@ -60,4 +60,8 @@ public interface VoteUserMapper {
                                 @Param("userId") Long userId);
 
     List<VoteUser> selectForExcel(Long voteId);
+
+    List<VoteUser> selectAllByHash(@Param("hash")String hash);
+
+
 }

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -130,9 +131,12 @@ public class HashQueryScheduleJob {
             if (txStatus) {
                 Transaction transaction;
                 transaction = chain3j.mcGetTransactionByHash(hash).send().getResult();
-                // 校验 input data
-                log.info(transaction.getInput());
-                return true;
+                // 数据校验
+                if (dataValidate(hash, hexStringToString(transaction.getInput()), transaction.getFrom())) {
+                    return true;
+                } else {
+                    log.error("数据校验失败： " + hash);
+                }
             }
         } catch (IOException e) {
             log.error(e.getLocalizedMessage(), e);
@@ -159,13 +163,46 @@ public class HashQueryScheduleJob {
     public static void main(String[] args) throws IOException {
         // 查询 moac 交易状态
         Chain3j chain3j = Chain3j.build(new HttpService("https://chain3.mytokenpocket.vip"));
-        String hash = "0x8165af34c1395f7c89f9528575dc288a3e558ce9b4f87a06b76539c206d1f0c5";
+        String hash = "0xd0a133f2fd88c48ac68f62cde64a29a2c3b1d3816773a6ce926606a1da0dee91";
         TransactionReceipt transactionReceipt = chain3j.mcGetTransactionReceipt(hash).send().getResult();
         boolean txStatus = transactionReceipt.isStatusOK();
         if (txStatus) {
             Transaction transaction = chain3j.mcGetTransactionByHash(hash).send().getResult();
             // 校验 input data
             log.info(transaction.getInput());
+            log.info(transaction.getFrom());
+            log.info(transaction.getTo());
+            log.info(hexStringToString(transaction.getInput()));
+        }
+    }
+
+    private static String hexStringToString(String s) {
+        if (s == null || s.equals("")) {
+            return null;
+        }
+        s = s.replace(" ", "");
+        s = s.replace("0x", "");
+        byte[] baKeyword = new byte[s.length() / 2];
+        for (int i = 0; i < baKeyword.length; i++) {
+            baKeyword[i] = (byte) (0xff & Integer.parseInt(s.substring(i * 2, i * 2 + 2), 16));
+        }
+        return new String(baKeyword, StandardCharsets.UTF_8);
+    }
+
+    private boolean dataValidate(String hash, String data, String from) {
+        List<VoteUser> voteUserList = voteUserMapper.selectAllByHash(hash);
+        if (voteUserList.isEmpty()) {
+            log.error("dataValidate fail: list is empty");
+            return false;
+        } else {
+            String address = voteUserList.get(0).getAddress();
+            Long voteId = voteUserList.get(0).getVoteId();
+            String voteHash = voteMapper.selectByPrimaryKey(voteId).getHash();
+            if (!data.contains(voteHash)) {
+                log.error("dataValidate fail: input data error ");
+                return false;
+            }
+            return address.equals(from);
         }
     }
 }

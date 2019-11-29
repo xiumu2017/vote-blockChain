@@ -135,8 +135,6 @@ public class JwtTokenUtil {
     }
 
     public boolean validateEquals(String token, String dbToken) {
-        System.out.println(token);
-        System.out.println(dbToken);
         return token.trim().equals(dbToken);
     }
 }

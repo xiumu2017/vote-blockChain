@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,11 +45,14 @@ public class VoteExportController {
         List<VoteUser> list = voteService.selectExcel(voteId);
         List<Object[]> dataList = getDataList(list);
         String[] rowNames = {"序号", "address", "已选择", "状态", "链上地址", "投票时间"};
-        ExcelExportUtils utils = new ExcelExportUtils(vote.getTopic() + "投票结果统计表",
-                rowNames, dataList, request, response);
+        ExcelExportUtils.ExcelExportCfg cfg = ExcelExportUtils.ExcelExportCfg.builder()
+                .request(request).response(response).dataList(dataList).rowName(rowNames)
+                .sheetName(vote.getTopic() + "投票结果统计表")
+                .title(vote.getTopic() + "投票结果统计表")
+                .build();
         try {
-            utils.exportData();
-        } catch (IOException e) {
+            ExcelExportUtils.exportData(cfg);
+        } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getLocalizedMessage(), e);
         }

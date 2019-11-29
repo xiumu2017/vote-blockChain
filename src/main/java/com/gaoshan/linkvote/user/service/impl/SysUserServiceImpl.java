@@ -11,6 +11,7 @@ import com.gaoshan.linkvote.user.mapper.SysUserMapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +24,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -100,7 +103,14 @@ public class SysUserServiceImpl implements SysUserService {
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails,
                     null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            token = jwtTokenUtil.generateToken(userDetails);
+            // 判断token 是否存在
+            String dbToken = sysUserMapper.selectByName(username).getToken();
+            if (StringUtils.isBlank(dbToken) || !jwtTokenUtil.isTokenExpired(dbToken)) {
+                token = jwtTokenUtil.generateToken(userDetails);
+                sysUserMapper.updateTokenById(token, username);
+            } else {
+                token = dbToken;
+            }
         } catch (AuthenticationException e) {
             log.warn("登录异常:{}", e.getMessage());
         }
@@ -125,7 +135,17 @@ public class SysUserServiceImpl implements SysUserService {
             return Rx.error("新旧密码相同");
         }
         if (sysUserMapper.changePassword(user.getId(), encodePassword) == 1) {
-            return Rx.success();
+            // 重新生成token
+            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails,
+                    null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String token = jwtTokenUtil.generateToken(userDetails);
+            sysUserMapper.updateTokenById(token, user.getUsername());
+            Map<String, String> tokenMap = new HashMap<>();
+            tokenMap.put("token", token);
+            tokenMap.put("tokenHead", tokenHead);
+            return Rx.success(tokenMap);
         }
         return Rx.fail();
     }

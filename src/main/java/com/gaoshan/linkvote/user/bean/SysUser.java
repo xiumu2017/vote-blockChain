@@ -50,4 +50,6 @@ public class SysUser {
     private Long updateUser;
     @ApiModelProperty(hidden = true)
     private String password;
+    @ApiModelProperty(hidden = true)
+    private String token;
 }

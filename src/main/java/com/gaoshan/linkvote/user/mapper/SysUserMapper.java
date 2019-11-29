@@ -76,4 +76,8 @@ public interface SysUserMapper {
     List<SysUser> selectByAll(SysUser sysUser);
 
     int delAdminUser(Long id, Long userId);
+
+    int updateTokenById(@Param("updatedToken") String updatedToken,
+                        @Param("username") String username);
+
 }

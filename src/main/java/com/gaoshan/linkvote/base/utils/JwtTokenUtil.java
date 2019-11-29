@@ -88,10 +88,16 @@ public class JwtTokenUtil {
 
     /**
      * 判断token是否已经失效
+     *
+     * @return true 未过期 false 过期
      */
-    private boolean isTokenExpired(String token) {
-        Date expiredDate = getExpiredDateFromToken(token);
-        return !expiredDate.before(new Date());
+    public boolean isTokenExpired(String token) {
+        try {
+            Date expiredDate = getExpiredDateFromToken(token);
+            return !expiredDate.before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -126,5 +132,11 @@ public class JwtTokenUtil {
         Claims claims = getClaimsFromToken(token);
         claims.put(CLAIM_KEY_CREATED, new Date());
         return generateToken(claims);
+    }
+
+    public boolean validateEquals(String token, String dbToken) {
+        System.out.println(token);
+        System.out.println(dbToken);
+        return token.trim().equals(dbToken);
     }
 }
